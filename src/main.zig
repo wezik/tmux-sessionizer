@@ -1,5 +1,5 @@
 const std = @import("std");
-const persistence = @import("persistence/main.zig");
+const tmux = @import("tmux/main.zig");
 
 pub fn main() !void {
     var args = std.process.args();
@@ -31,11 +31,11 @@ pub fn main() !void {
         .h, .help => help(),
         .v, .version => version(),
         .l, .list => {
-            const config = try persistence.fetchConfig(allocator);
-            for (config.entries) |entry| {
+            const sessions = try tmux.getSessions(allocator);
+            for (sessions) |entry| {
                 std.debug.print("Config:\n  session_name: {s}\n  session_path: {s}\n  panes: {any}\n", .{
-                    entry.session_name,
-                    entry.session_path,
+                    entry.name,
+                    entry.path,
                     entry.panes,
                 });
             }
@@ -53,11 +53,11 @@ pub fn select(allocator: std.mem.Allocator) !void {
 
     // write input to fzf stdin
     const stdin = fzf_cmd.stdin.?;
-    const config = try persistence.fetchConfig(allocator);
+    const sessions = try tmux.getSessions(allocator);
     {
         var writer = stdin.writer();
-        for (config.entries) |entry| {
-            try writer.print("{s}\n", .{entry.session_path});
+        for (sessions) |entry| {
+            _ = try writer.print("{s}\n", .{try tmux.sessionToKey(allocator, entry)});
         }
 
         // close stdin after writing all input
@@ -79,13 +79,11 @@ pub fn select(allocator: std.mem.Allocator) !void {
 }
 
 pub fn create(origin: []const u8, allocator: std.mem.Allocator) !void {
-    // Create directory if it doesn't exist
-    const config = try persistence.fetchConfig(allocator);
-    var new_config = std.ArrayList(persistence.ConfigEntry).init(allocator);
-    _ = try new_config.appendSlice(config.entries);
-    const new_entry = persistence.newEntry(origin);
-    _ = try new_config.append(new_entry);
-    try persistence.saveConfig(allocator, persistence.Config{ .entries = try new_config.toOwnedSlice() });
+    const session = tmux.TmuxSession{
+        .name = origin,
+        .path = origin,
+    };
+    _ = try tmux.appendSession(allocator, session);
 }
 
 pub fn help() void {
@@ -101,14 +99,7 @@ pub fn list() void {
 }
 
 pub fn delete(origin: []const u8, allocator: std.mem.Allocator) !void {
-    const config = try persistence.fetchConfig(allocator);
-    var new_config = std.ArrayList(persistence.ConfigEntry).init(allocator);
-    for (config.entries) |entry| {
-        if (!std.mem.eql(u8, entry.session_path, origin)) {
-            _ = try new_config.append(entry);
-        }
-    }
-    try persistence.saveConfig(allocator, persistence.Config{ .entries = try new_config.toOwnedSlice() });
+    _ = try tmux.deleteSession(origin, allocator);
 }
 
 test "simple test" {}

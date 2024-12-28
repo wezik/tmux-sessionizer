@@ -1,35 +1,12 @@
 const std = @import("std");
 const json = @import("json");
-
-pub fn newEntry(session_path: []const u8) ConfigEntry {
-    return ConfigEntry{
-        .session_path = session_path,
-        .session_name = session_path,
-    };
-}
-
-pub const TmuxEnvironment = struct {
-    cmds: []const []const u8,
-};
-
-pub const TmuxPane = struct {
-    name: []const u8,
-    active: bool,
-    env: ?TmuxEnvironment,
-};
-
-pub const ConfigEntry = struct {
-    session_path: []const u8,
-    session_name: []const u8,
-    env: ?TmuxEnvironment = null,
-    panes: []const TmuxPane = &[_]TmuxPane{TmuxPane{ .name = "shell", .active = true, .env = null }},
-};
-
-pub const Config = struct {
-    entries: []const ConfigEntry = &[_]ConfigEntry{},
-};
+const domain = @import("domain.zig");
 
 const configFileName = "config.json";
+
+pub const Config = struct {
+    entries: []const domain.TmuxSession = &[_]domain.TmuxSession{},
+};
 
 fn getConfigPath(allocator: std.mem.Allocator) ![]const u8 {
     const env_map = try allocator.create(std.process.EnvMap);
@@ -41,7 +18,8 @@ fn getConfigPath(allocator: std.mem.Allocator) ![]const u8 {
         value = try std.fmt.allocPrint(allocator, "{s}/.config", .{home});
     }
 
-    return try std.fmt.allocPrint(allocator, "{s}/tmux-sessionizer", .{value});
+    const result = try std.fmt.allocPrint(allocator, "{s}/tmux-sessionizer", .{value});
+    return result;
 }
 
 fn createDefaultConfig(allocator: std.mem.Allocator) !void {
