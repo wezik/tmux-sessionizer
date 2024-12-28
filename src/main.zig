@@ -17,10 +17,11 @@ pub fn main() !void {
         if (arg.len > 0) {
             break :blk arg;
         } else {
-            try hop(allocator);
+            try select(allocator);
             return;
         }
     };
+
     std.debug.print("cmd: {s}\n", .{cmd});
     const Case = enum { a, add, c, create, h, help, v, version, l, list, r, remove, d, delete };
     const case = std.meta.stringToEnum(Case, cmd) orelse return;
@@ -45,27 +46,30 @@ pub fn main() !void {
     }
 }
 
-pub fn hop(allocator: std.mem.Allocator) !void {
-
+pub fn select(allocator: std.mem.Allocator) !void {
     // run fzf
     var fzf_cmd = std.process.Child.init(&[_][]const u8{"fzf"}, allocator);
     fzf_cmd.stdin_behavior = .Pipe;
     fzf_cmd.stdout_behavior = .Pipe;
     _ = try fzf_cmd.spawn();
 
-    // write fzf input
-    const config = try persistence.fetchConfig(allocator);
+    // write input to fzf stdin
     const stdin = fzf_cmd.stdin.?;
-    var writer = stdin.writer();
-    for (config.entries) |entry| {
-        try writer.print("{s}\n", .{entry.session_path});
+    const config = try persistence.fetchConfig(allocator);
+    {
+        var writer = stdin.writer();
+        for (config.entries) |entry| {
+            try writer.print("{s}\n", .{entry.session_path});
+        }
+
+        // close stdin after writing all input
+        stdin.close();
     }
 
-    // read and wait for fzf to finish
+    // read fzf stdout
     const stdout = fzf_cmd.stdout.?;
     var output_buffer: [1024]u8 = undefined;
     const bytes_read = try stdout.readAll(&output_buffer);
-    _ = try fzf_cmd.wait();
 
     // parse fzf output
     const output = std.mem.trim(u8, output_buffer[0..bytes_read], &[_]u8{ 0, '\n' });
