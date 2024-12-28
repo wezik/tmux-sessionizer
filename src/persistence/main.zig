@@ -8,10 +8,21 @@ pub fn newEntry(session_path: []const u8) ConfigEntry {
     };
 }
 
+pub const TmuxEnvironment = struct {
+    cmds: []const []const u8,
+};
+
+pub const TmuxPane = struct {
+    name: []const u8,
+    active: bool,
+    env: ?TmuxEnvironment,
+};
+
 pub const ConfigEntry = struct {
     session_path: []const u8,
     session_name: []const u8,
-    windows: []const []const u8 = &[_][]const u8{"shell"},
+    env: ?TmuxEnvironment = null,
+    panes: []const TmuxPane = &[_]TmuxPane{TmuxPane{ .name = "shell", .active = true, .env = null }},
 };
 
 pub const Config = struct {
@@ -63,6 +74,14 @@ pub fn fetchConfig(allocator: std.mem.Allocator) !Config {
 }
 
 pub fn saveConfig(allocator: std.mem.Allocator, config: Config) !void {
+    // TODO: okay this is bad but it's a quick fix for now
+    // * when removing a session, the config file needs to be truncated however
+    // * as far as I've seen there are some weird inconsistencies with how zig behaves,
+    // * need to explore this further.
+    //
+    // * also, maybe it's just better to create a new file and overwrite it every time
+    _ = try createDefaultConfig(allocator);
+
     const file = try openConfigFile(allocator);
     const serialized = try json.toPrettySlice(allocator, config);
     _ = try file.writer().writeAll(serialized);

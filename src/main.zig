@@ -27,22 +27,20 @@ pub fn main() !void {
     const case = std.meta.stringToEnum(Case, cmd) orelse return;
 
     switch (case) {
-        .a, .add, .c, .create => {
-            try create(origin, allocator);
-        },
+        .a, .add, .c, .create => try create(origin, allocator),
         .h, .help => help(),
         .v, .version => version(),
         .l, .list => {
             const config = try persistence.fetchConfig(allocator);
             for (config.entries) |entry| {
-                std.debug.print("Config:\n  session_name: {s}\n  session_path: {s}\n  windows: {s}\n", .{
+                std.debug.print("Config:\n  session_name: {s}\n  session_path: {s}\n  panes: {any}\n", .{
                     entry.session_name,
                     entry.session_path,
-                    entry.windows,
+                    entry.panes,
                 });
             }
         },
-        .r, .remove, .d, .delete => delete(),
+        .r, .remove, .d, .delete => try delete(origin, allocator),
     }
 }
 
@@ -70,13 +68,13 @@ pub fn select(allocator: std.mem.Allocator) !void {
     const stdout = fzf_cmd.stdout.?;
     var output_buffer: [1024]u8 = undefined;
     const bytes_read = try stdout.readAll(&output_buffer);
+    stdout.close();
 
     // parse fzf output
     const output = std.mem.trim(u8, output_buffer[0..bytes_read], &[_]u8{ 0, '\n' });
     std.debug.print("output: {s}\n", .{output});
 
     // TODO: setup or attach (meaning return the session name) to the selected session
-
     return;
 }
 
@@ -102,8 +100,15 @@ pub fn list() void {
     std.debug.print("list\n", .{});
 }
 
-pub fn delete() void {
-    std.debug.print("delete\n", .{});
+pub fn delete(origin: []const u8, allocator: std.mem.Allocator) !void {
+    const config = try persistence.fetchConfig(allocator);
+    var new_config = std.ArrayList(persistence.ConfigEntry).init(allocator);
+    for (config.entries) |entry| {
+        if (!std.mem.eql(u8, entry.session_path, origin)) {
+            _ = try new_config.append(entry);
+        }
+    }
+    try persistence.saveConfig(allocator, persistence.Config{ .entries = try new_config.toOwnedSlice() });
 }
 
 test "simple test" {}
