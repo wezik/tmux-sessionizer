@@ -1,25 +1,15 @@
 const std = @import("std");
-const json = @import("json");
-
-pub fn getConfigPath(allocator: std.mem.Allocator) ![]const u8 {
-    const env_map = try allocator.create(std.process.EnvMap);
-    env_map.* = try std.process.getEnvMap(allocator);
-
-    var value = env_map.get("XDG_CONFIG_HOME") orelse "";
-    if (value.len == 0) {
-        const home = env_map.get("HOME") orelse ".";
-        value = try std.fmt.allocPrint(allocator, "{s}/.config", .{home});
-    }
-
-    return try std.fmt.allocPrint(allocator, "{s}/tmux-sessionizer", .{value});
-}
+const persistence = @import("persistence/main.zig");
 
 pub fn main() !void {
     var args = std.process.args();
     // skip program name
     _ = args.skip();
 
+    const origin = args.next() orelse return;
+    std.debug.print("origin: {s}\n", .{origin});
     const cmd = args.next() orelse return;
+    std.debug.print("cmd: {s}\n", .{cmd});
     const Case = enum { a, add, c, create, h, help, v, version, l, list, r, remove, d, delete };
     const case = std.meta.stringToEnum(Case, cmd) orelse return;
 
@@ -29,57 +19,32 @@ pub fn main() !void {
 
     switch (case) {
         .a, .add, .c, .create => {
-            const config = try readConfig(allocator);
-            std.debug.print("Config:\n  session_name: {s}\n  session_path: {s}\n  windows: {s}\n", .{
-                config.session_name,
-                config.session_path,
-                config.windows,
-            });
+            try create(origin, allocator);
         },
         .h, .help => help(),
         .v, .version => version(),
-        .l, .list => list(),
+        .l, .list => {
+            const config = try persistence.fetchConfig(allocator);
+            for (config.entries) |entry| {
+                std.debug.print("Config:\n  session_name: {s}\n  session_path: {s}\n  windows: {s}\n", .{
+                    entry.session_name,
+                    entry.session_path,
+                    entry.windows,
+                });
+            }
+        },
         .r, .remove, .d, .delete => delete(),
     }
 }
 
-const Config = struct {
-    session_name: []const u8 = "default",
-    session_path: []const u8 = "test",
-    windows: []const []const u8 = &[_][]const u8{"default"},
-};
-
-pub fn readConfig(allocator: std.mem.Allocator) !Config {
-    var cwd = std.fs.cwd();
-    cwd = try cwd.makeOpenPath(try getConfigPath(allocator), .{});
-
-    // const file = try dir.openFile(sub_path: []const u8, flags: File.OpenFlags)
-    const configFileName = "config.json";
-    const open_flags = std.fs.File.OpenFlags{ .mode = .read_write };
-    const file = blk: {
-        const f = cwd.openFile(configFileName, open_flags) catch {
-            // break :blk try cwd.createFile(configFileName, .{});
-            const f = try cwd.createFile(configFileName, .{});
-
-            // write in a default config
-            const serialized = try json.toSlice(allocator, Config{});
-            const fw = f.writer();
-            _ = try fw.writeAll(serialized);
-
-            break :blk f;
-        };
-        break :blk f;
-    };
-    defer file.close();
-
-    const file_buffer = try file.readToEndAlloc(allocator, 1024);
-    const deserialized = try json.fromSlice(allocator, Config, file_buffer);
-    return deserialized.value;
-}
-
-pub fn create() !void {
+pub fn create(origin: []const u8, allocator: std.mem.Allocator) !void {
     // Create directory if it doesn't exist
-    std.debug.print("create\n", .{});
+    const config = try persistence.fetchConfig(allocator);
+    var new_config = std.ArrayList(persistence.ConfigEntry).init(allocator);
+    _ = try new_config.appendSlice(config.entries);
+    const new_entry = persistence.newEntry(origin);
+    _ = try new_config.append(new_entry);
+    try persistence.saveConfig(allocator, persistence.Config{ .entries = try new_config.toOwnedSlice() });
 }
 
 pub fn help() void {
