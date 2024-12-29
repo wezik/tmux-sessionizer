@@ -36,7 +36,7 @@ pub fn main() !void {
                 std.debug.print("Config:\n  session_name: {s}\n  session_path: {s}\n  panes: {any}\n", .{
                     entry.name,
                     entry.path,
-                    entry.panes,
+                    entry.windows,
                 });
             }
         },
@@ -75,6 +75,7 @@ pub fn select(allocator: std.mem.Allocator) !void {
     std.debug.print("output: {s}\n", .{output});
 
     // TODO: setup or attach (meaning return the session name) to the selected session
+    _ = try tmux.prepareSession(output, allocator);
     return;
 }
 
