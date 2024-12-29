@@ -23,31 +23,28 @@ pub fn appendSession(allocator: std.mem.Allocator, session: TmuxSession) !void {
     try config.saveConfig(allocator, try new_sessions.toOwnedSlice());
 }
 
-pub fn prepareSession(key: []const u8, allocator: std.mem.Allocator) !void {
-    // check if session exists
-    // if not, create it
-    var exists_cmd = std.process.Child.init(&[_][]const u8{ "tmux", "has-session", "-t", key }, allocator);
-    // set stdout to pipe
-    exists_cmd.stderr_behavior = .Ignore;
-    _ = try exists_cmd.spawn();
-    // check exit code
-    const exit_code = try exists_cmd.wait();
-    if (exit_code.Exited == 0) {
-        std.debug.print("Session exists: {s}\n", .{key});
-        return;
-    }
-
+pub fn prepareSession(key: []const u8, allocator: std.mem.Allocator) ![]const u8 {
     const sessions = try getSessions(allocator);
     for (sessions) |entry| {
         if (!std.mem.eql(u8, try sessionToKey(allocator, entry), key)) {
             continue;
         }
+        // check if session exists
+        // if not, create it
+        var exists_cmd = std.process.Child.init(&[_][]const u8{ "tmux", "has-session", "-t", entry.name }, allocator);
+        // set stdout to pipe
+        exists_cmd.stderr_behavior = .Ignore;
+        _ = try exists_cmd.spawn();
+        // check exit code
+        const exit_code = try exists_cmd.wait();
+        if (exit_code.Exited == 0) {
+            return entry.name;
+        }
 
         _ = try helper_initSession(allocator, entry);
-
-        break;
+        return entry.name;
     }
-    return;
+    return error.SessionNotFound;
 }
 
 fn helper_initSession(allocator: std.mem.Allocator, session: TmuxSession) !void {
