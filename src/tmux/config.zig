@@ -4,10 +4,6 @@ const domain = @import("domain.zig");
 
 const configFileName = "config.json";
 
-pub const Config = struct {
-    entries: []const domain.TmuxSession = &[_]domain.TmuxSession{},
-};
-
 fn getConfigPath(allocator: std.mem.Allocator) ![]const u8 {
     const env_map = try allocator.create(std.process.EnvMap);
     env_map.* = try std.process.getEnvMap(allocator);
@@ -26,7 +22,7 @@ fn createDefaultConfig(allocator: std.mem.Allocator) !void {
     var cwd = std.fs.cwd();
     cwd = try cwd.makeOpenPath(try getConfigPath(allocator), .{});
     const f = try cwd.createFile(configFileName, .{});
-    const serialized = try json.toPrettySlice(allocator, Config{});
+    const serialized = try json.toPrettySlice(allocator, [_]domain.TmuxSession{});
     _ = try f.writer().writeAll(serialized);
 }
 
@@ -44,14 +40,14 @@ fn openConfigFile(allocator: std.mem.Allocator) !std.fs.File {
     return file;
 }
 
-pub fn fetchConfig(allocator: std.mem.Allocator) !Config {
+pub fn fetchConfig(allocator: std.mem.Allocator) ![]const domain.TmuxSession {
     const file = try openConfigFile(allocator);
     const file_buffer = try file.readToEndAlloc(allocator, 1024 * 1024);
-    const deserialized = try json.fromSlice(allocator, Config, file_buffer);
+    const deserialized = try json.fromSlice(allocator, []const domain.TmuxSession, file_buffer);
     return deserialized.value;
 }
 
-pub fn saveConfig(allocator: std.mem.Allocator, config: Config) !void {
+pub fn saveConfig(allocator: std.mem.Allocator, config: []domain.TmuxSession) !void {
     // TODO: okay this is bad but it's a quick fix for now
     // * when removing a session, the config file needs to be truncated however
     // * as far as I've seen there are some weird inconsistencies with how zig behaves,

@@ -6,8 +6,7 @@ pub const TmuxEnvironment = domain.TmuxEnvironment;
 pub const TmuxWindow = domain.TmuxWindow;
 
 pub fn getSessions(allocator: std.mem.Allocator) ![]const TmuxSession {
-    const cfg = try config.fetchConfig(allocator);
-    return cfg.entries;
+    return try config.fetchConfig(allocator);
 }
 
 pub fn appendSession(allocator: std.mem.Allocator, session: TmuxSession) !void {
@@ -21,7 +20,7 @@ pub fn appendSession(allocator: std.mem.Allocator, session: TmuxSession) !void {
         _ = try new_sessions.append(entry);
     }
     _ = try new_sessions.append(session);
-    try config.saveConfig(allocator, config.Config{ .entries = try new_sessions.toOwnedSlice() });
+    try config.saveConfig(allocator, try new_sessions.toOwnedSlice());
 }
 
 pub fn prepareSession(key: []const u8, allocator: std.mem.Allocator) !void {
@@ -70,12 +69,12 @@ fn helper_initSession(allocator: std.mem.Allocator, session: TmuxSession) !void 
     // wait for tmux to finish
     _ = try tmux_session_exec.wait();
     // open windows
-    _ = try openWindows(allocator, session);
+    _ = try helper_openWindows(allocator, session);
     // set env in windows
     _ = try setEnvInWindows(allocator, session);
 }
 
-fn openWindows(allocator: std.mem.Allocator, session: TmuxSession) !void {
+fn helper_openWindows(allocator: std.mem.Allocator, session: TmuxSession) !void {
     // dont open the first one as its the default one in the session
     for (session.windows[1..]) |window| {
         const new_window_cmd = &[_][]const u8{
@@ -100,11 +99,11 @@ fn setEnvInWindows(allocator: std.mem.Allocator, session: TmuxSession) !void {
         const window_id = try std.fmt.allocPrint(allocator, "{s}:{s}", .{ session.name, window.name });
 
         // apply per session env
-        for (session.env.cmds) |cmd| {
+        for (session.env) |cmd| {
             _ = try helper_execCmdInWindow(allocator, cmd, window_id);
         }
         // apply per window env
-        for (window.env.cmds) |cmd| {
+        for (window.env) |cmd| {
             _ = try helper_execCmdInWindow(allocator, cmd, window_id);
         }
     }
@@ -135,7 +134,7 @@ pub fn deleteSession(key: []const u8, allocator: std.mem.Allocator) !void {
             std.debug.print("Removing: {s}\n", .{entry.name});
         }
     }
-    _ = try config.saveConfig(allocator, config.Config{ .entries = try new_sessions.toOwnedSlice() });
+    _ = try config.saveConfig(allocator, try new_sessions.toOwnedSlice());
 }
 
 pub fn sessionToKey(allocator: std.mem.Allocator, entry: TmuxSession) ![]const u8 {
