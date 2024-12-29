@@ -9,6 +9,10 @@ pub fn getSessions(allocator: std.mem.Allocator) ![]const TmuxSession {
     return try config.fetchConfig(allocator);
 }
 
+pub fn getConfigPath(allocator: std.mem.Allocator) ![]const u8 {
+    return try config.getFullConfigPath(allocator);
+}
+
 pub fn appendSession(allocator: std.mem.Allocator, session: TmuxSession) !void {
     const sessions = try getSessions(allocator);
     var new_sessions = std.ArrayList(TmuxSession).init(allocator);

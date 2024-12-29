@@ -18,6 +18,10 @@ fn getConfigPath(allocator: std.mem.Allocator) ![]const u8 {
     return result;
 }
 
+pub fn getFullConfigPath(allocator: std.mem.Allocator) ![]const u8 {
+    return try std.fmt.allocPrint(allocator, "{s}/{s}", .{ try getConfigPath(allocator), configFileName });
+}
+
 fn createDefaultConfig(allocator: std.mem.Allocator) !void {
     var cwd = std.fs.cwd();
     cwd = try cwd.makeOpenPath(try getConfigPath(allocator), .{});

@@ -21,7 +21,7 @@ pub fn main() !void {
         }
     };
 
-    const Case = enum { a, add, c, create, h, help, v, version, l, list, r, remove, d, delete };
+    const Case = enum { a, add, c, create, h, help, v, version, l, list, r, remove, d, delete, e, edit };
     const case = std.meta.stringToEnum(Case, cmd) orelse return;
 
     switch (case) {
@@ -38,6 +38,7 @@ pub fn main() !void {
                 });
             }
         },
+        .e, .edit => std.debug.print("{s}\n", .{try tmux.getConfigPath(allocator)}),
         .r, .remove, .d, .delete => try delete(origin, allocator),
     }
 }

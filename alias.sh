@@ -6,8 +6,8 @@ ORIGINAL_DIR="$(pwd)"
 cd $APP_DIR || exit
 
 # "magic" capture, using script to grab stderr without interfering with the app (fzf is acting weird with a simple redirect)
-# stderr=$(script -q -c "./zig-out/bin/tmux-sessionizer \"$ORIGINAL_DIR\" \"$@\"" /dev/null 2>&1 | tee /dev/stderr)
-stderr=$(script -q -c "zig build run -- \"$ORIGINAL_DIR\" \"$@\"" /dev/null 2>&1 | tee /dev/stderr)
+stderr=$(script -q -c "./zig-out/bin/tmux-sessionizer \"$ORIGINAL_DIR\" \"$@\"" /dev/null 2>&1 | tee /dev/stderr)
+# stderr=$(script -q -c "zig build run -- \"$ORIGINAL_DIR\" \"$@\"" /dev/null 2>&1 | tee /dev/stderr)
 
 # take the last line and operate based on cmd received, also clears it from the screen
 last_line=$(echo "$stderr" | tail -n 1 | tr -d '\r' | tr -d '\n')
