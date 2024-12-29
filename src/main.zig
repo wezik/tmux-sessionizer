@@ -11,7 +11,6 @@ pub fn main() !void {
     const allocator = arena.allocator();
 
     const origin = args.next() orelse return;
-    std.debug.print("origin: {s}\n", .{origin});
     const cmd = blk: {
         const arg = args.next() orelse "";
         if (arg.len > 0) {
@@ -22,7 +21,6 @@ pub fn main() !void {
         }
     };
 
-    std.debug.print("cmd: {s}\n", .{cmd});
     const Case = enum { a, add, c, create, h, help, v, version, l, list, r, remove, d, delete };
     const case = std.meta.stringToEnum(Case, cmd) orelse return;
 
@@ -72,10 +70,18 @@ pub fn select(allocator: std.mem.Allocator) !void {
 
     // parse fzf output
     const output = std.mem.trim(u8, output_buffer[0..bytes_read], &[_]u8{ 0, '\n' });
-    std.debug.print("output: {s}\n", .{output});
 
     // TODO: setup or attach (meaning return the session name) to the selected session
-    _ = try tmux.prepareSession(output, allocator);
+    const attach_hook = tmux.prepareSession(output, allocator) catch |err| {
+        // since we are using fzf, realistically only SessionNotFound possible is an empty input
+        // so we can just return here
+        if (err == error.SessionNotFound) {
+            return;
+        } else {
+            return err;
+        }
+    };
+    std.debug.print("attach_hook:{s}\n", .{attach_hook});
     return;
 }
 
