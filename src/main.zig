@@ -1,6 +1,6 @@
 const std = @import("std");
 const tmux = @import("tmux/main.zig");
-const fzf = @import("fzf-client.zig");
+const fzf = @import("fzf/client.zig");
 
 const ValidCommands = enum {
     s,
