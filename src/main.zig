@@ -1,5 +1,6 @@
 const std = @import("std");
 const tmux = @import("tmux/main.zig");
+const fzf = @import("fzf-client.zig");
 
 const ValidCommands = enum {
     s,
@@ -60,43 +61,23 @@ pub fn main() !void {
 }
 
 pub fn select(allocator: std.mem.Allocator) !void {
-    // run fzf
-    var fzf_cmd = std.process.Child.init(&[_][]const u8{"fzf"}, allocator);
-    fzf_cmd.stdin_behavior = .Pipe;
-    fzf_cmd.stdout_behavior = .Pipe;
-    _ = try fzf_cmd.spawn();
-
-    // write input to fzf stdin
-    const stdin = fzf_cmd.stdin.?;
+    // prepare fzf input
     const sessions = try tmux.getSessions(allocator);
-    {
-        var writer = stdin.writer();
-        for (sessions) |entry| {
-            _ = try writer.print("{s}\n", .{try tmux.sessionToKey(allocator, entry)});
-        }
-
-        // close stdin after writing all input
-        stdin.close();
+    var input = std.ArrayList([]const u8).init(allocator);
+    var entryToSession = std.StringHashMap(tmux.TmuxSession).init(allocator);
+    for (sessions) |session| {
+        const entry = try tmux.sessionToKey(allocator, session);
+        _ = try entryToSession.put(entry, session);
+        _ = try input.append(entry);
     }
 
-    // read fzf stdout
-    const stdout = fzf_cmd.stdout.?;
-    var output_buffer: [1024]u8 = undefined;
-    const bytes_read = try stdout.readAll(&output_buffer);
-    stdout.close();
+    // run fzf
+    const output = try fzf.exec(allocator, try input.toOwnedSlice());
 
-    // parse fzf output
-    const output = std.mem.trim(u8, output_buffer[0..bytes_read], &[_]u8{ 0, '\n' });
-
-    // TODO: setup or attach (meaning return the session name) to the selected session
     const attach_hook = tmux.prepareSession(output, allocator) catch |err| {
         // since we are using fzf, realistically only SessionNotFound possible is an empty input
-        // so we can just return here
-        if (err == error.SessionNotFound) {
-            return;
-        } else {
-            return err;
-        }
+        if (err == error.SessionNotFound) return;
+        return err;
     };
     std.debug.print("attach_hook:{s}\n", .{attach_hook});
     return;
