@@ -120,11 +120,13 @@ fn helper_execCmdInWindow(allocator: std.mem.Allocator, cmd: []const u8, window_
     _ = try in_window_exec.wait();
 }
 
-pub fn deleteSession(key: []const u8, allocator: std.mem.Allocator) !void {
+pub fn deleteSession(allocator: std.mem.Allocator, session: domain.TmuxSession) !void {
     const sessions = try getSessions(allocator);
     var new_sessions = std.ArrayList(TmuxSession).init(allocator);
     for (sessions) |entry| {
-        if (!std.mem.eql(u8, try sessionToKey(allocator, entry), key)) {
+        const is_same_name = std.mem.eql(u8, entry.name, session.name);
+        const is_same_path = std.mem.eql(u8, entry.path, session.path);
+        if (!is_same_name and !is_same_path) {
             _ = try new_sessions.append(entry);
         } else {
             std.debug.print("Removing: {s}\n", .{entry.name});

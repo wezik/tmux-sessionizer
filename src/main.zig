@@ -68,7 +68,7 @@ pub fn main() !void {
             }
         },
         .e, .edit => Signal.edit.send(try tmux.getConfigPath(allocator)),
-        .r, .remove, .d, .delete => try delete(origin, allocator),
+        .r, .remove, .d, .delete => try delete(allocator),
     }
 }
 
@@ -112,8 +112,23 @@ pub fn list() void {
     std.debug.print("list\n", .{});
 }
 
-pub fn delete(origin: []const u8, allocator: std.mem.Allocator) !void {
-    _ = try tmux.deleteSession(origin, allocator);
+pub fn delete(allocator: std.mem.Allocator) !void {
+    // prepare fzf input
+    const sessions = try tmux.getSessions(allocator);
+    var input = std.ArrayList([]const u8).init(allocator);
+    var entryToSession = std.StringHashMap(tmux.TmuxSession).init(allocator);
+    for (sessions) |session| {
+        const entry = try tmux.sessionToKey(allocator, session);
+        _ = try entryToSession.put(entry, session);
+        _ = try input.append(entry);
+    }
+
+    // run fzf
+    const output = try fzf.exec(allocator, try input.toOwnedSlice());
+    const resultSession = entryToSession.get(output) orelse return;
+    _ = try tmux.deleteSession(allocator, resultSession);
+
+    return;
 }
 
 test "simple test" {}
