@@ -1,30 +1,46 @@
 const std = @import("std");
 const tmux = @import("tmux/main.zig");
 
+const ValidCommands = enum {
+    s,
+    select,
+    a,
+    add,
+    c,
+    create,
+    h,
+    help,
+    v,
+    version,
+    l,
+    list,
+    r,
+    remove,
+    d,
+    delete,
+    e,
+    edit,
+};
+
+fn popArg(args: *std.process.ArgIterator) ValidCommands {
+    // if no arg is passed, select is the case
+    const cmd = args.next() orelse return ValidCommands.select;
+    return std.meta.stringToEnum(ValidCommands, cmd) orelse return ValidCommands.select;
+}
+
 pub fn main() !void {
     var args = std.process.args();
+
     // skip program name
     _ = args.skip();
+    const origin = args.next() orelse return;
 
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    const origin = args.next() orelse return;
-    const cmd = blk: {
-        const arg = args.next() orelse "";
-        if (arg.len > 0) {
-            break :blk arg;
-        } else {
-            try select(allocator);
-            return;
-        }
-    };
-
-    const Case = enum { a, add, c, create, h, help, v, version, l, list, r, remove, d, delete, e, edit };
-    const case = std.meta.stringToEnum(Case, cmd) orelse return;
-
-    switch (case) {
+    switch (popArg(&args)) {
+        .s, .select => try select(allocator),
         .a, .add, .c, .create => try create(origin, allocator),
         .h, .help => help(),
         .v, .version => version(),
