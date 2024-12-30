@@ -19,20 +19,6 @@ pub fn build(b: *std.Build) void {
     const opts = .{ .target = target, .optimize = optimize };
     const json_mod = b.dependency("json", opts).module("json");
 
-    const lib = b.addStaticLibrary(.{
-        .name = "tmux-sessionizer",
-        // In this case the main source file is merely a path, however, in more
-        // complicated build scripts, this could be a generated file.
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    // This declares intent for the library to be installed into the standard
-    // location when the user invokes the "install" step (the default step when
-    // running `zig build`).
-    b.installArtifact(lib);
-
     const exe = b.addExecutable(.{
         .name = "tmux-sessionizer",
         .root_source_file = b.path("src/main.zig"),
