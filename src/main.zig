@@ -23,6 +23,18 @@ const ValidCommands = enum {
     edit,
 };
 
+/// Signals that can be sent to shell_script to perform actions
+const Signal = enum {
+    /// tmux attach signal
+    tmux_attach,
+    /// edit signal
+    edit,
+
+    pub fn send(self: Signal, string: []const u8) void {
+        std.debug.print("signal:{s}:{s}\n", .{ @tagName(self), string });
+    }
+};
+
 fn popArg(args: *std.process.ArgIterator) ValidCommands {
     // if no arg is passed, select is the case
     const cmd = args.next() orelse return ValidCommands.select;
@@ -55,7 +67,7 @@ pub fn main() !void {
                 });
             }
         },
-        .e, .edit => std.debug.print("{s}\n", .{try tmux.getConfigPath(allocator)}),
+        .e, .edit => Signal.edit.send(try tmux.getConfigPath(allocator)),
         .r, .remove, .d, .delete => try delete(origin, allocator),
     }
 }
@@ -73,13 +85,10 @@ pub fn select(allocator: std.mem.Allocator) !void {
 
     // run fzf
     const output = try fzf.exec(allocator, try input.toOwnedSlice());
+    const resultSession = entryToSession.get(output) orelse return;
 
-    const attach_hook = tmux.prepareSession(output, allocator) catch |err| {
-        // since we are using fzf, realistically only SessionNotFound possible is an empty input
-        if (err == error.SessionNotFound) return;
-        return err;
-    };
-    std.debug.print("attach_hook:{s}\n", .{attach_hook});
+    _ = try tmux.prepareSession(resultSession);
+    Signal.tmux_attach.send(resultSession.name);
     return;
 }
 
