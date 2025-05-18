@@ -43,6 +43,16 @@ func ListAndDelete() {
 	repo.DeleteProject(selected.UUID)
 }
 
+// List and edit
+
+func ListAndEdit(editor string) {
+	selected, err := selectProject()
+	// this means a search should just be canceled
+	if err != nil { return }
+	fmt.Println("Editing:", selected)
+	fmt.Println("TODO: create temp file and open it in editor, after save and pull changes")
+}
+
 // Helper functions
 
 func selectProject() (project.Project, error) {
