@@ -1,4 +1,4 @@
-package project_manager
+package project_service
 
 import (
 	"fmt"
