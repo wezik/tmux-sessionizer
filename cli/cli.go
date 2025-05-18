@@ -12,5 +12,6 @@ func onStart() {
 
 func Run() {
 	onStart()
-	routes.MainRoute(os.Args[1:])
+	args := os.Args[1:] // strip first arg (executable name)
+	routes.MainRoute(args)
 }

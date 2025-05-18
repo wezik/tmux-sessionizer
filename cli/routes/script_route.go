@@ -2,14 +2,13 @@ package routes
 
 import (
 	"fmt"
-	"os"
 	"strings"
 )
 
 func ScriptRoute(args []string) {
 	if len(args) == 0 {
 		fmt.Println("Missing script command")
-		os.Exit(1)
+		return
 	}
 
 	switch strings.ToLower(args[0]) {
@@ -24,6 +23,5 @@ func ScriptRoute(args []string) {
 
 	default:
 		fmt.Println("Unknown script command")
-		os.Exit(1)
 	}
 }
