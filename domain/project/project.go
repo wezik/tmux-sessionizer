@@ -3,21 +3,23 @@ package project
 import (
 	"fmt"
 	"phopper/domain"
+	"phopper/domain/globals"
 )
 
 // Create
 
 type CreateProjectCommand struct {
-	Repository domain.ProjectRepository
-	Path string
+	Cwd string
 }
 
 func CreateProject(cmd CreateProjectCommand) domain.TmuxProject {
 	project := domain.TmuxProject{
-		Name: cmd.Path,
-		Path: cmd.Path,
+		Name: cmd.Cwd,
+		Path: cmd.Cwd,
 	}
-	saved := cmd.Repository.SaveProject(project)
+
+	repo := globals.Get().ProjectRepository
+	saved := repo.SaveProject(project)
 
 	fmt.Println("Created project:", saved)
 	return saved
@@ -25,38 +27,37 @@ func CreateProject(cmd CreateProjectCommand) domain.TmuxProject {
 
 // List and select
 
-type ListAndSelectCommand struct {
-	Repository domain.ProjectRepository
-	Selector domain.Selector
-}
-
-func ListAndSelect(cmd ListAndSelectCommand) {
-	selected := selectProject(cmd.Repository, cmd.Selector)
+func ListAndSelect() {
+	selected := selectProject()
 	fmt.Println("Selected:", selected)
 }
 
 // List and delete
 
-type ListAndDeleteCommand struct {
-	Repository domain.ProjectRepository
-	Selector domain.Selector
-}
-
-func ListAndDelete(cmd ListAndDeleteCommand) {
-	selected := selectProject(cmd.Repository, cmd.Selector)
-	cmd.Repository.DeleteProject(selected.UUID)
+func ListAndDelete() {
+	selected := selectProject()
+	repo := globals.Get().ProjectRepository
+	repo.DeleteProject(selected.UUID)
 }
 
 // Helper functions
 
-func selectProject(repository domain.ProjectRepository, selector domain.Selector) domain.TmuxProject {
-	projects := repository.GetAllProjects()
+func selectProject() domain.TmuxProject {
+	repo := globals.Get().ProjectRepository
+	projects := repo.GetProjects()
 
-	stringifiedProjects := make([]string, len(projects))
-	for i, project := range projects {
-		stringifiedProjects[i] = project.String()
+	entries := make(map[string]domain.TmuxProject)
+	for _, project := range projects {
+		entries[project.Name] = project
 	}
 
-	selectedStr := selector.ListAndSelect(stringifiedProjects, "Select project")
-	return domain.TmuxProjectFromString(selectedStr)
+	keys := make([]string, 0, len(entries))
+	for key := range entries {
+		keys = append(keys, key)
+	}
+
+	selector := globals.Get().Selector
+	selectedStr := selector.ListAndSelect(keys, "Select project > ")
+
+	return entries[selectedStr]
 }

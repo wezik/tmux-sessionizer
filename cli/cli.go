@@ -3,46 +3,39 @@ package cli
 import (
 	"fmt"
 	"os"
+	"phopper/domain/globals"
 	"phopper/domain/project"
-	"phopper/infra/repository"
-	"phopper/infra/selector"
 	"strings"
 )
 
+func setup() {
+	globals.Get().Database.RunMigrations()
+}
+
 func Run() {
+	setup()
+
 	args := os.Args[1:]
 
-	repo := repository.FSProjectRepository{}
-	selector := selector.FzfSelector{}
-
 	if len(args) == 0 {
-		cmd := project.ListAndSelectCommand{
-			Repository: repo,
-			Selector: selector,
-		}
-		project.ListAndSelect(cmd)
+		project.ListAndSelect()
 		os.Exit(0)
 	}
 
 	switch strings.ToLower(args[0]) {
 	case "a", "add", "c", "create":
-		path, err := os.Getwd()
+		cwd, err := os.Getwd()
 		if err != nil {
 			fmt.Println("Could not get current working directory")
 			os.Exit(1)
 		}
 		cmd := project.CreateProjectCommand {
-			Path: path,
-			Repository: repo,
+			Cwd: cwd,
 		}
 		project.CreateProject(cmd)
 
 	case "d", "delete", "r", "remove":
-		cmd := project.ListAndDeleteCommand{
-			Repository: repo,
-			Selector: selector,
-		}
-		project.ListAndDelete(cmd)
+		project.ListAndDelete()
 
 	case "e", "edit":
 		fmt.Println("TODO edit a project")

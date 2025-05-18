@@ -1,4 +1,4 @@
-package selector
+package fzf_selector
 
 import (
 	"bytes"
