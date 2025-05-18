@@ -12,7 +12,7 @@ import (
 func Run() {
 	args := os.Args[1:]
 
-	repo := repository.LocalProjectRepository{}
+	repo := repository.NewLocalProjectRepository()
 	selector := selector.FzfSelector{}
 
 	if len(args) == 0 {
