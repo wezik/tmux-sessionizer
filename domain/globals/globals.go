@@ -1,24 +1,25 @@
 package globals
 
 import (
-	"phopper/domain"
+	"phopper/domain/database"
+	"phopper/domain/database/repository"
+	"phopper/domain/selector"
 	"phopper/infra/database/sqlite_database"
 	"phopper/infra/selector/fzf_selector"
 )
 
 type Globals struct {
-	Database domain.Database
-	ProjectRepository domain.ProjectRepository
-	Selector domain.Selector
+	Database database.Database
+	ProjectRepository repository.ProjectRepository
+	Selector selector.Selector
 }
 
 func Get() Globals {
-	database := sqlite_database.SqliteDatabase{}
+	db := sqlite_database.SqliteDatabase{}
 
 	return Globals{
-		Database: database,
-		ProjectRepository: database.GetProjectRepository(),
+		Database: db,
+		ProjectRepository: db.GetProjectRepository(),
 		Selector: fzf_selector.FzfSelector{},
 	}
 }
-
