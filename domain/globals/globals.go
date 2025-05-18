@@ -2,8 +2,8 @@ package globals
 
 import (
 	"phopper/domain"
+	"phopper/infra/database/sqlite_database"
 	"phopper/infra/selector/fzf_selector"
-	"phopper/infra/storage/sqlite_database"
 )
 
 type Globals struct {
