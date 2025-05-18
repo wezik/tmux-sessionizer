@@ -3,6 +3,7 @@ package sqlite_database
 import (
 	"database/sql"
 	"fmt"
+	"phopper/domain/errors"
 	"phopper/domain/project"
 
 	"github.com/google/uuid"
@@ -16,9 +17,8 @@ func (_ SqliteProjectRepository) GetProjects() []project.Project {
 	defer db.Close()
 
 	rows, err := db.Query(`SELECT uuid, name, path FROM projects;`)
-	if err != nil {
-		panic(err)
-	}
+	errors.EnsureNotNil(err, "Could not query projects")
+
 	defer rows.Close()
 
 	projects := []project.Project{}
@@ -26,10 +26,10 @@ func (_ SqliteProjectRepository) GetProjects() []project.Project {
 		var uuid string
 		var name string
 		var path string
+
 		err = rows.Scan(&uuid, &name, &path)
-		if err != nil {
-			panic(err)
-		}
+		errors.EnsureNotNil(err, "Could not scan project")
+
 		projects = append(projects, project.Project{UUID: uuid, Name: name, Path: path})
 	}
 	return projects
@@ -45,26 +45,22 @@ func (_ SqliteProjectRepository) SaveProject(project project.Project) project.Pr
 
 	project.Name = renameIfExists(db, project.Name)
 
-	// insert project
 	sql := `INSERT INTO projects (uuid, name, path) VALUES (?, ?, ?);`
+
 	_, err := db.Exec(sql, project.UUID, project.Name, project.Path)
-	if err != nil {
-		panic(err)
-	}
+	errors.EnsureNotNil(err, "Could not save project")
 
 	return project
 }
 
-// updates the name with order numbers if identical one already exist
+// util function that updates the name with order numbers if identical one already exist
 func renameIfExists(db *sql.DB, name string) string {
 	var order = 0
 	temp := name
 	for true {
 		var count int
 		err := db.QueryRow(`SELECT COUNT(*) FROM projects WHERE name = ?;`, temp).Scan(&count)
-		if err != nil {
-			panic(err)
-		}
+		errors.EnsureNotNil(err, "Could not check if project name exists")
 
 		if count == 0 {
 			break
@@ -81,7 +77,5 @@ func (_ SqliteProjectRepository) DeleteProject(uuid string) {
 	defer db.Close()
 
 	_, err := db.Exec(`DELETE FROM projects WHERE uuid = ?;`, uuid)
-	if err != nil {
-		panic(err)
-	}
+	errors.EnsureNotNil(err, "Could not delete project")
 }

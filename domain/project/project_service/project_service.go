@@ -25,21 +25,27 @@ func CreateProject(cmd CreateProjectCommand) project.Project {
 // List and select
 
 func ListAndSelect() {
-	selected := selectProject()
+	selected, err := selectProject()
+	// this means a search should just be canceled
+	if err != nil { return }
+
 	fmt.Println("Selected:", selected)
 }
 
 // List and delete
 
 func ListAndDelete() {
-	selected := selectProject()
+	selected, err := selectProject()
+	// this means a search should just be canceled
+	if err != nil { return }
+
 	repo := globals.Get().ProjectRepository
 	repo.DeleteProject(selected.UUID)
 }
 
 // Helper functions
 
-func selectProject() project.Project {
+func selectProject() (project.Project, error) {
 	repo := globals.Get().ProjectRepository
 	projects := repo.GetProjects()
 
@@ -54,7 +60,9 @@ func selectProject() project.Project {
 	}
 
 	selector := globals.Get().Selector
-	selectedKey := selector.ListAndSelect(keys, "Select project > ")
 
-	return entries[selectedKey]
+	selectedKey, err := selector.ListAndSelect(keys, "Select project > ")
+	if err != nil { return project.Project{}, err }
+
+	return entries[selectedKey], nil
 }

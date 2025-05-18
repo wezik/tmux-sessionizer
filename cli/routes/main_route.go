@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 	"os"
+	"phopper/domain/errors"
 	"phopper/domain/project/project_service"
 	"strings"
 )
@@ -15,18 +16,12 @@ func MainRoute(args []string) {
 	}
 
 	switch strings.ToLower(args[0]) {
-	case "a", "add", "c", "create":
+	case "a", "add", "c", "create": {
 		cwd, err := os.Getwd()
-		if err != nil {
-			fmt.Println("Could not get current working directory")
-			os.Exit(1)
-		}
+		errors.EnsureNotNil(err, "Could not get current working directory")
 
-		cmd := project_service.CreateProjectCommand {
-			Cwd: cwd,
-		}
-
-		project_service.CreateProject(cmd)
+		project_service.CreateProject(project_service.CreateProjectCommand{Cwd: cwd})
+	}
 	
 	case "d", "delete", "r", "remove":
 		project_service.ListAndDelete()

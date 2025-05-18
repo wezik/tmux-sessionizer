@@ -2,14 +2,12 @@ package fzf_selector
 
 import (
 	"bytes"
-	"fmt"
-	"os"
 	"os/exec"
 )
 
 type FzfSelector struct {}
 
-func (s FzfSelector) ListAndSelect(entries []string, prompt string) string {
+func (s FzfSelector) ListAndSelect(entries []string, prompt string) (string, error) {
 	var input bytes.Buffer
 
 	for _, entry := range entries {
@@ -20,10 +18,8 @@ func (s FzfSelector) ListAndSelect(entries []string, prompt string) string {
 	fzfCmd.Stdin = &input
 
 	output, err := fzfCmd.Output()
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
-	}
+	// this is most likely a canceled fzf search by the user
+	if err != nil { return "", err }
 
-	return string(bytes.TrimSpace(output))
+	return string(bytes.TrimSpace(output)), nil
 }
