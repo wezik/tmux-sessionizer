@@ -7,7 +7,6 @@ import (
 )
 
 func ScriptRoute(args []string) {
-
 	if len(args) == 0 {
 		fmt.Println("Missing script command")
 		os.Exit(1)
