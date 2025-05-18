@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 	"phopper/domain/project"
-	"phopper/infra/config"
 	"phopper/infra/repository"
+	"phopper/infra/selector"
 	"strings"
 )
 
@@ -13,12 +13,12 @@ func Run() {
 	args := os.Args[1:]
 
 	repo := repository.LocalProjectRepository{}
-	config := config.LocalConfig{}
+	selector := selector.FzfSelector{}
 
 	if len(args) == 0 {
 		cmd := project.ListAndSelectCommand{
 			Repository: repo,
-			Config: config,
+			Selector: selector,
 		}
 		project.ListAndSelect(cmd)
 		os.Exit(0)
@@ -33,8 +33,12 @@ func Run() {
 			Repository: repo,
 		}
 		project.CreateProject(cmd)
-	case "r", "remove":
-		fmt.Println("TODO remove a project")
+	case "d", "delete", "r", "remove":
+		cmd := project.ListAndDeleteCommand{
+			Repository: repo,
+			Selector: selector,
+		}
+		project.ListAndDelete(cmd)
 	case "e", "edit":
 		fmt.Println("TODO edit a project")
 	case "s", "script":
