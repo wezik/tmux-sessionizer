@@ -26,10 +26,13 @@ func Run() {
 
 	switch strings.ToLower(args[0]) {
 	case "a", "add", "c", "create":
-		// TODO fetch a path from the current directory
-		fmt.Println("TODO fetch a path from the current directory")
+		path, err := os.Getwd()
+		if err != nil {
+			fmt.Println("Could not get current working directory")
+			os.Exit(1)
+		}
 		cmd := project.CreateProjectCommand {
-			Path: "some path",
+			Path: path,
 			Repository: repo,
 		}
 		project.CreateProject(cmd)
