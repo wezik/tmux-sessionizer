@@ -12,7 +12,7 @@ import (
 func Run() {
 	args := os.Args[1:]
 
-	repo := repository.NewLocalProjectRepository()
+	repo := repository.FSProjectRepository{}
 	selector := selector.FzfSelector{}
 
 	if len(args) == 0 {
@@ -25,7 +25,7 @@ func Run() {
 	}
 
 	switch strings.ToLower(args[0]) {
-	case "a", "add":
+	case "a", "add", "c", "create":
 		// TODO fetch a path from the current directory
 		fmt.Println("TODO fetch a path from the current directory")
 		cmd := project.CreateProjectCommand {
@@ -33,14 +33,17 @@ func Run() {
 			Repository: repo,
 		}
 		project.CreateProject(cmd)
+
 	case "d", "delete", "r", "remove":
 		cmd := project.ListAndDeleteCommand{
 			Repository: repo,
 			Selector: selector,
 		}
 		project.ListAndDelete(cmd)
+
 	case "e", "edit":
 		fmt.Println("TODO edit a project")
+
 	case "s", "script":
 		if (len(args) < 2) {
 			fmt.Println("Missing script command")
@@ -50,16 +53,19 @@ func Run() {
 		fmt.Println("TODO script management")
 
 		switch strings.ToLower(args[1]) {
-			case "c", "create", "a", "add":
-				fmt.Println("TODO create a script")
-			case "d", "delete", "r", "remove":
-				fmt.Println("TODO delete a script")
-			case "l", "list":
-				fmt.Println("TODO list scripts")
-			default:
-				fmt.Println("Unknown script command")
-				os.Exit(1)
+		case "c", "create", "a", "add":
+			fmt.Println("TODO create a script")
+
+		case "d", "delete", "r", "remove":
+			fmt.Println("TODO delete a script")
+
+		case "l", "list":
+			fmt.Println("TODO list scripts")
+		default:
+			fmt.Println("Unknown script command")
+			os.Exit(1)
 		}
+
 	default:
 		fmt.Println("Unknown command")
 		os.Exit(1)
