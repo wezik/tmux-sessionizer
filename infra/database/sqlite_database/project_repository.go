@@ -3,7 +3,7 @@ package sqlite_database
 import (
 	"database/sql"
 	"fmt"
-	"phopper/domain"
+	"phopper/domain/project"
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
@@ -11,7 +11,7 @@ import (
 
 type SqliteProjectRepository struct {}
 
-func (_ SqliteProjectRepository) GetProjects() []domain.TmuxProject {
+func (_ SqliteProjectRepository) GetProjects() []project.Project {
 	db := openDB()
 	defer db.Close()
 
@@ -21,7 +21,7 @@ func (_ SqliteProjectRepository) GetProjects() []domain.TmuxProject {
 	}
 	defer rows.Close()
 
-	projects := []domain.TmuxProject{}
+	projects := []project.Project{}
 	for rows.Next() {
 		var uuid string
 		var name string
@@ -30,12 +30,12 @@ func (_ SqliteProjectRepository) GetProjects() []domain.TmuxProject {
 		if err != nil {
 			panic(err)
 		}
-		projects = append(projects, domain.TmuxProject{UUID: uuid, Name: name, Path: path})
+		projects = append(projects, project.Project{UUID: uuid, Name: name, Path: path})
 	}
 	return projects
 }
 
-func (_ SqliteProjectRepository) SaveProject(project domain.TmuxProject) domain.TmuxProject {
+func (_ SqliteProjectRepository) SaveProject(project project.Project) project.Project {
 	db := openDB()
 	defer db.Close()
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"phopper/domain/globals"
-	"phopper/domain/project"
+	"phopper/domain/project/project_manager"
 	"strings"
 )
 
@@ -18,7 +18,7 @@ func Run() {
 	args := os.Args[1:]
 
 	if len(args) == 0 {
-		project.ListAndSelect()
+		project_manager.ListAndSelect()
 		os.Exit(0)
 	}
 
@@ -29,13 +29,13 @@ func Run() {
 			fmt.Println("Could not get current working directory")
 			os.Exit(1)
 		}
-		cmd := project.CreateProjectCommand {
+		cmd := project_manager.CreateProjectCommand {
 			Cwd: cwd,
 		}
-		project.CreateProject(cmd)
+		project_manager.CreateProject(cmd)
 
 	case "d", "delete", "r", "remove":
-		project.ListAndDelete()
+		project_manager.ListAndDelete()
 
 	case "e", "edit":
 		fmt.Println("TODO edit a project")
