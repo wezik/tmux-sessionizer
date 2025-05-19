@@ -24,12 +24,13 @@ func CreateProject(cmd CreateProjectCommand) project.Project {
 
 // List and select
 
-func ListAndSelect() {
+func ListAndSelect() (project.Project, error) {
 	selected, err := selectProject()
 	// this means a search should just be canceled
-	if err != nil { return }
+	if err != nil { return project.Project{}, err }
 
 	fmt.Println("Selected:", selected)
+	return selected, nil
 }
 
 // List and delete
