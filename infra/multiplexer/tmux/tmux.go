@@ -10,7 +10,7 @@ import (
 type Tmux struct {}
  
 func (t Tmux) AssembleAndAttach(project project.Project) {
-	if !sessionExists(project.Name) {
+	if !sessionExists(project.Session.Name) {
 		createSession(project)
 	}
 
@@ -30,9 +30,9 @@ func createSession(project project.Project) {
 		"new-session",
 		"-d",
 		"-s",
-		project.Name,
+		project.Session.Name,
 		"-c",
-		project.Path,
+		project.Session.Path,
 		"-n",
 		"shell",
 		)
@@ -51,7 +51,7 @@ func enterSession(project project.Project) {
 		}
 	}()
 
-	cmd := exec.Command("tmux", sessionCmd, "-t", project.Name)
+	cmd := exec.Command("tmux", sessionCmd, "-t", project.Session.Name)
 
 	// bind to terminal
 	cmd.Stdin = os.Stdin
