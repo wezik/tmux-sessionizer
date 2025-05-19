@@ -18,7 +18,7 @@ func CreateProject(cmd CreateProjectCommand) project.Project {
 	new_project := project.New(cmd.Cwd, cmd.Cwd)
 	saved := repo.SaveProject(new_project)
 
-	fmt.Println("Created project:", saved)
+	fmt.Println("Successfully created", saved.Session.Name, "template")
 	return saved
 }
 
@@ -28,8 +28,6 @@ func ListAndSelect() (project.Project, error) {
 	selected, err := selectProject()
 	// this means a search should just be canceled
 	if err != nil { return project.Project{}, err }
-
-	fmt.Println("Selected:", selected)
 	return selected, nil
 }
 
@@ -62,7 +60,7 @@ func selectProject() (project.Project, error) {
 
 	entries := make(map[string]project.Project)
 	for _, project := range projects {
-		entries[project.Name] = project
+		entries[project.Session.Name] = project
 	}
 
 	keys := make([]string, 0, len(entries))

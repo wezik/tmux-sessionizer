@@ -30,8 +30,13 @@ func (_ SqliteProjectRepository) GetProjects() []project.Project {
 		err = rows.Scan(&uuid, &name, &path)
 		errors.EnsureNotNil(err, "Could not scan project")
 
-		projects = append(projects, project.Project{UUID: uuid, Name: name, Path: path})
+		project := project.Project{
+			UUID: uuid,
+			Session: project.SessionTemplate{Name: name, Path: path},
+		}
+		projects = append(projects, project)
 	}
+
 	return projects
 }
 
@@ -43,11 +48,11 @@ func (_ SqliteProjectRepository) SaveProject(project project.Project) project.Pr
 		project.UUID = uuid.New().String()
 	}
 
-	project.Name = renameIfExists(db, project.Name)
+	project.Session.Name = renameIfExists(db, project.Session.Name)
 
 	sql := `INSERT INTO projects (uuid, name, path) VALUES (?, ?, ?);`
 
-	_, err := db.Exec(sql, project.UUID, project.Name, project.Path)
+	_, err := db.Exec(sql, project.UUID, project.Session.Name, project.Session.Path)
 	errors.EnsureNotNil(err, "Could not save project")
 
 	return project
@@ -67,7 +72,7 @@ func renameIfExists(db *sql.DB, name string) string {
 		}
 
 		order++
-		temp = fmt.Sprintf("%s (%d)", name, order)
+		temp = fmt.Sprintf("%s(%d)", name, order)
 	}
 	return temp
 }
