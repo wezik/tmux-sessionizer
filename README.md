@@ -34,6 +34,6 @@ Available commands:
   a, add, c, create     Create a new project in the current working directory
   d, delete, r, remove  Delete a project
   e, edit               Edit a project with the given editor, defaults to nano
-  s, script             Manage scripts (see thop script help for more info)
+  s, script             Manage scripts (see phop script help for more info)
   l, list               List projects
   h, help               Show this help
