@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"phopper/domain/errors"
+	"phopper/domain/globals"
 	"phopper/domain/project/project_service"
 	"strings"
 )
@@ -20,9 +21,13 @@ Usage: thop [command]
 `
 
 func MainRoute(args []string) {
+	multiplexer := globals.Get().Multiplexer
+
 	// no args defaults to project selection
 	if len(args) == 0 {
-		project_service.ListAndSelect()
+		selected, err := project_service.ListAndSelect()
+		if err != nil { return }
+		multiplexer.AssembleAndAttach(selected)
 		return
 	}
 
@@ -51,7 +56,9 @@ func MainRoute(args []string) {
 		ScriptRoute(args[1:])
 
 	case "l", "list":
-		project_service.ListAndSelect()
+		selected, err := project_service.ListAndSelect()
+		if err != nil { return }
+		multiplexer.AssembleAndAttach(selected)
 
 	case "h", "help":
 		fmt.Print(helpText)
