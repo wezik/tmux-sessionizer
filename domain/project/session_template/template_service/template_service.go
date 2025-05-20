@@ -8,7 +8,7 @@ import (
 	"phopper/domain/project"
 )
 
-func EditTemplate(editor string, p project.Project) {
+func EditTemplate(p project.Project, editor string) {
 	// this should prob be handled by something else than a repo
 	// but for now it's fine more in the interface
 	repo := globals.Get().ProjectRepository

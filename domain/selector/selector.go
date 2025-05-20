@@ -1,5 +1,8 @@
 package selector
 
+import "phopper/domain/project"
+
 type Selector interface {
-	ListAndSelect(entries []string, prompt string) (string, error)
+	// if this function returns an error, treat is as a canceled selection
+	SelectFrom(entries []project.Project, prompt string) (project.Project, error)
 }
