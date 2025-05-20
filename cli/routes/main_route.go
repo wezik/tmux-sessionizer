@@ -40,7 +40,7 @@ func MainRoute(args []string) {
 	case "l", "list":
 		selectProject()
 	default:
-		fmt.Println("Unknown command")
+		fmt.Print(helpText)
 	}
 }
 
