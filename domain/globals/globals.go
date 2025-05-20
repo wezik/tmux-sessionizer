@@ -5,12 +5,14 @@ import (
 	"phopper/domain/database/repository"
 	"phopper/domain/multiplexer"
 	"phopper/domain/selector"
-	"phopper/infra/database/sqlite_database"
+	// "phopper/infra/database/sqlite_database"
+	"phopper/infra/database/yaml_database"
 	"phopper/infra/multiplexer/tmux"
 	"phopper/infra/selector/fzf_selector"
 )
 
 type Globals struct {
+	// home-made DI
 	Database database.Database
 	ProjectRepository repository.ProjectRepository
 	Selector selector.Selector
@@ -18,7 +20,8 @@ type Globals struct {
 }
 
 func Get() Globals {
-	db := sqlite_database.SqliteDatabase{}
+	// db := sqlite_database.SqliteDatabase{}
+	db := yaml_database.YamlDatabase{}
 
 	return Globals{
 		Database: db,
