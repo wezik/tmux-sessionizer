@@ -13,10 +13,10 @@ import (
 
 type Globals struct {
 	// home-made DI
-	Database database.Database
+	Database          database.Database
 	ProjectRepository repository.ProjectRepository
-	Selector selector.Selector
-	Multiplexer multiplexer.Multiplexer
+	Selector          selector.Selector
+	Multiplexer       multiplexer.Multiplexer
 }
 
 func Get() Globals {
@@ -24,9 +24,9 @@ func Get() Globals {
 	db := yaml_database.YamlDatabase{}
 
 	return Globals{
-		Database: db,
+		Database:          db,
 		ProjectRepository: db.GetProjectRepository(),
-		Selector: fzf_selector.FzfSelector{},
-		Multiplexer: tmux.Tmux{},
+		Selector:          fzf_selector.FzfSelector{},
+		Multiplexer:       tmux.Tmux{},
 	}
 }

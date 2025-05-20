@@ -29,12 +29,18 @@ func MainRoute(args []string) {
 	}
 
 	switch strings.ToLower(args[0]) {
-	case "a", "add", "c", "create": createProject()
-	case "d", "delete", "r", "remove": deleteProject()
-	case "e", "edit": editProject(args[1:])
-	case "s", "script": ScriptRoute(args[1:])
-	case "l", "list": selectProject()
-	default: fmt.Println("Unknown command")
+	case "a", "add", "c", "create":
+		createProject()
+	case "d", "delete", "r", "remove":
+		deleteProject()
+	case "e", "edit":
+		editProject(args[1:])
+	case "s", "script":
+		ScriptRoute(args[1:])
+	case "l", "list":
+		selectProject()
+	default:
+		fmt.Println("Unknown command")
 	}
 }
 
@@ -45,7 +51,9 @@ func selectProject() {
 	pjs := project_service.List()
 
 	selected, err := selector.SelectFrom(pjs, "Select project to attach > ")
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 
 	multiplexer.AssembleAndAttach(selected)
 }
@@ -64,7 +72,9 @@ func deleteProject() {
 	pjs := project_service.List()
 
 	selected, err := selector.SelectFrom(pjs, "Select project to delete > ")
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 
 	project_service.Delete(selected.UUID)
 	fmt.Println("Successfully deleted", selected.Session.Name, "template")
@@ -80,8 +90,10 @@ func editProject(args []string) {
 
 	pjs := project_service.List()
 	selected, err := selector.SelectFrom(pjs, "Select project to edit > ")
-	if err != nil { return }
-	
+	if err != nil {
+		return
+	}
+
 	project_service.Edit(selected, editor)
 	fmt.Println("Successfully edited", selected.Session.Name, "template")
 }

@@ -7,11 +7,11 @@ import (
 	"slices"
 )
 
-type FzfSelector struct {}
+type FzfSelector struct{}
 
 func (s FzfSelector) SelectFrom(entries []project.Project, prompt string) (project.Project, error) {
 	var input bytes.Buffer
-	
+
 	projectsMap := make(map[string]project.Project)
 	for _, project := range entries {
 		projectsMap[project.Session.Name] = project
@@ -33,7 +33,9 @@ func (s FzfSelector) SelectFrom(entries []project.Project, prompt string) (proje
 
 	output, err := fzfCmd.Output()
 	// this is most likely a canceled fzf search by the user
-	if err != nil { return project.Project{}, err }
+	if err != nil {
+		return project.Project{}, err
+	}
 
 	selectedString := string(bytes.TrimSpace(output))
 	selected := projectsMap[selectedString]

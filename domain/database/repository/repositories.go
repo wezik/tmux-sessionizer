@@ -12,4 +12,3 @@ type ProjectRepository interface {
 	// TODO: adjust implementation to make more sense domain wise
 	PrepareTemplateFilePath(project.Project) string
 }
-

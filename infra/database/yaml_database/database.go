@@ -2,7 +2,7 @@ package yaml_database
 
 import "phopper/domain/database/repository"
 
-type YamlDatabase struct {}
+type YamlDatabase struct{}
 
 func (y YamlDatabase) GetProjectRepository() repository.ProjectRepository {
 	return YamlProjectRepository{}
