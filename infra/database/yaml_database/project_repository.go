@@ -72,7 +72,7 @@ func (y YamlProjectRepository) DeleteProject(uuid string) {
 func getConfigPath() string {
 	cfg, err := os.UserConfigDir()
 	errors.EnsureNotNil(err, "Could not get user config dir")
-	return filepath.Join(cfg, ".phop")
+	return filepath.Join(cfg, ".phop", "templates")
 }
 
 func (y YamlProjectRepository) PrepareTemplateFilePath(p project.Project) string {
