@@ -7,8 +7,8 @@ import (
 	"phopper/domain/project"
 )
 
-type Tmux struct {}
- 
+type Tmux struct{}
+
 func (t Tmux) AssembleAndAttach(project project.Project) {
 	if !sessionExists(project.Session.Name) {
 		createSession(project)
@@ -20,7 +20,9 @@ func (t Tmux) AssembleAndAttach(project project.Project) {
 func sessionExists(session string) bool {
 	cmd := exec.Command("tmux", "has-session", "-t", session)
 	err := cmd.Run()
-	if err != nil { return false }
+	if err != nil {
+		return false
+	}
 	return cmd.ProcessState.ExitCode() == 0
 }
 
@@ -35,7 +37,7 @@ func createSession(project project.Project) {
 		project.Session.Path,
 		"-n",
 		"shell",
-		)
+	)
 
 	err := cmd.Run()
 	errors.EnsureNotNil(err, "Could not create new session")

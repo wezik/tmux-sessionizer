@@ -2,7 +2,7 @@ package sqlite_database
 
 type migration struct {
 	description string
-	sql string
+	sql         string
 }
 
 func getMigrations() []migration {
@@ -19,4 +19,3 @@ func getMigrations() []migration {
 		},
 	}
 }
-

@@ -15,7 +15,7 @@ const sql_create_migrations_table = `CREATE TABLE IF NOT EXISTS migrations (vers
 const sql_insert_migration = `INSERT INTO migrations (version, description) VALUES (?, ?);`
 const sql_count_migrations = `SELECT COUNT(*) FROM migrations;`
 
-type SqliteDatabase struct {}
+type SqliteDatabase struct{}
 
 // util function to not retype driver and file path every time
 func openDB() *sql.DB {
@@ -36,7 +36,7 @@ func (_ SqliteDatabase) GetProjectRepository() SqliteProjectRepository {
 
 func (_ SqliteDatabase) RunMigrations() {
 	migrations := getMigrations()
-	
+
 	db := openDB()
 	defer db.Close()
 

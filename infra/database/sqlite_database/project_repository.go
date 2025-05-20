@@ -12,7 +12,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type SqliteProjectRepository struct {}
+type SqliteProjectRepository struct{}
 
 func (_ SqliteProjectRepository) GetProjects() []project.Project {
 	db := openDB()
@@ -33,7 +33,7 @@ func (_ SqliteProjectRepository) GetProjects() []project.Project {
 		errors.EnsureNotNil(err, "Could not scan project")
 
 		project := project.Project{
-			UUID: uuid,
+			UUID:    uuid,
 			Session: session_template.SessionTemplate{Name: name, Path: path},
 		}
 		projects = append(projects, project)

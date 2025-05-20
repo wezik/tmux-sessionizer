@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type YamlProjectRepository struct {}
+type YamlProjectRepository struct{}
 
 const templateFileName = "template.yaml"
 

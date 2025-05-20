@@ -20,7 +20,7 @@ func GetDefaults() Config {
 		editor = prepareLaunchCmd(runtime.GOOS)
 	}
 
-	return Config {
+	return Config{
 		Editor: editor,
 	}
 }
@@ -32,7 +32,7 @@ func prepareLaunchCmd(current_os string) string {
 	case "linux":
 		return "xdg-open"
 	case "windows":
-		cmd      := "url.dll,FileProtocolHandler"
+		cmd := "url.dll,FileProtocolHandler"
 		runDll32 := filepath.Join(os.Getenv("SYSTEMROOT"), "System32", "rundll32.exe")
 		return runDll32 + " " + cmd
 	default:
