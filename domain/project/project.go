@@ -1,19 +1,12 @@
 package project
 
+import "phopper/domain/project/session_template"
+
 type Project struct {
-	UUID string             `yaml:"-"`
-	Session SessionTemplate `yaml:"session"`
+	UUID string                              `yaml:"-"` // skip this field when marshalling
+	Session session_template.SessionTemplate `yaml:"session"`
 }
 
-type SessionTemplate struct {
-	// keeping the name to a session as it's used primarily to differentiate between sessions
-	// maybe it's a good idea to default to a project name, and make it configurable in the future
-	Name string `yaml:"name"`
-	Path string `yaml:"path"`
-}
-
-func New(name string, path string) Project {
-	return Project{
-		Session: SessionTemplate{Name: name, Path: path},
-	}
+func New(path string) Project {
+	return Project{ Session: session_template.New(path) }
 }
