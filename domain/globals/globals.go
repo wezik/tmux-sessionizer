@@ -1,13 +1,13 @@
 package globals
 
 import (
-	"phopper/domain/storage"
-	"phopper/domain/storage/repository"
 	"phopper/domain/multiplexer"
 	"phopper/domain/selector"
-	"phopper/infra/storage/yaml_storage"
+	"phopper/domain/storage"
+	"phopper/domain/storage/repository"
 	"phopper/infra/multiplexer/tmux"
 	"phopper/infra/selector/fzf_selector"
+	"phopper/infra/storage/yaml_storage"
 )
 
 type Globals struct {

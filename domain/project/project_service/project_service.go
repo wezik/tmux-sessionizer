@@ -3,7 +3,7 @@ package project_service
 import (
 	"phopper/domain/globals"
 	"phopper/domain/project"
-	"phopper/domain/project/session_template/template_service"
+	"phopper/domain/project/template/template_service"
 )
 
 func Create(cwd string) project.Project {

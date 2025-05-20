@@ -1,5 +1,7 @@
 package storage
 
+import "phopper/domain/storage/repository"
+
 type Storage interface {
-	RunMigrations()
+	GetProjectRepository() repository.ProjectRepository
 }
