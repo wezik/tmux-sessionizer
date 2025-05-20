@@ -1,4 +1,4 @@
-package yaml_database
+package yaml_storage
 
 import (
 	"os"
@@ -17,7 +17,17 @@ const templateFileName = "template.yaml"
 func (y YamlProjectRepository) GetProjects() []project.Project {
 	dir := getConfigPath()
 
-	files, err := os.ReadDir(dir)
+	files, err := func() ([]os.DirEntry, error) {
+		files, err := os.ReadDir(dir)
+
+		// create and retry on fail
+		if err != nil {
+			createConfigDir()
+			files, err = os.ReadDir(dir)
+		}
+
+		return files, err
+	}()
 	errors.EnsureNotNil(err, "Could not read directory")
 
 	projects := make([]project.Project, 0)
@@ -48,8 +58,7 @@ func (y YamlProjectRepository) SaveProject(project project.Project) project.Proj
 	dir := getConfigPath()
 	templateFile := filepath.Join(dir, project.UUID, templateFileName)
 
-	err := os.MkdirAll(filepath.Dir(templateFile), 0755)
-	errors.EnsureNotNil(err, "Could not create directory")
+	createConfigDir()
 
 	f, err := os.Create(templateFile)
 	errors.EnsureNotNil(err, "Could not create template file")
@@ -69,12 +78,19 @@ func (y YamlProjectRepository) DeleteProject(uuid string) {
 	errors.EnsureNotNil(err, "Could not delete project")
 }
 
+func (y YamlProjectRepository) PrepareTemplateFilePath(p project.Project) string {
+	return filepath.Join(getConfigPath(), p.UUID, templateFileName)
+}
+
 func getConfigPath() string {
 	cfg, err := os.UserConfigDir()
 	errors.EnsureNotNil(err, "Could not get user config dir")
 	return filepath.Join(cfg, ".phop", "templates")
 }
 
-func (y YamlProjectRepository) PrepareTemplateFilePath(p project.Project) string {
-	return filepath.Join(getConfigPath(), p.UUID, templateFileName)
+func createConfigDir() {
+	path := getConfigPath()
+	err := os.MkdirAll(path, 0755)
+	errors.EnsureNotNil(err, "Could not create config dir")
 }
+

@@ -1,9 +1,9 @@
 package session_template
 
-const version = "0.0.1"
+const version = 1
 
 type SessionTemplate struct {
-	Version string `yaml:"version"` // used primarily by file system based storage
+	Version int `yaml:"version"`
 	Name    string `yaml:"name"`
 	Path    string `yaml:"path"`
 }
