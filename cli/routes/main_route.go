@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 	"os"
+	"phopper/domain/config"
 	"phopper/domain/errors"
 	"phopper/domain/globals"
 	"phopper/domain/project/project_service"
@@ -47,7 +48,7 @@ func MainRoute(args []string) {
 		if len(args) > 1 {
 			editor = args[1]
 		} else {
-			fmt.Println("No editor specified, defaulting to", editor)
+			editor = config.GetDefaults().Editor
 		}
 		project_service.ListAndEdit(editor)
 	}
