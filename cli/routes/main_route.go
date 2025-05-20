@@ -44,10 +44,10 @@ func MainRoute(args []string) {
 
 	case "e", "edit": {
 		var editor = "nano"
-		if len(args) < 2 {
-			fmt.Println("No editor specified, defaulting to nano")
-		} else {
+		if len(args) > 1 {
 			editor = args[1]
+		} else {
+			fmt.Println("No editor specified, defaulting to", editor)
 		}
 		project_service.ListAndEdit(editor)
 	}

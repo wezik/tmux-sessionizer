@@ -12,6 +12,8 @@ import (
 
 type YamlProjectRepository struct {}
 
+const templateFileName = "template.yaml"
+
 func (y YamlProjectRepository) GetProjects() []project.Project {
 	dir := getConfigPath()
 
@@ -22,7 +24,7 @@ func (y YamlProjectRepository) GetProjects() []project.Project {
 
 	for _, file := range files {
 		if file.IsDir() {
-			templateFile := filepath.Join(dir, file.Name(), "template.yaml")
+			templateFile := filepath.Join(dir, file.Name(), templateFileName)
 
 			f, err := os.ReadFile(templateFile)
 			errors.EnsureNotNil(err, "Could not read template file")
@@ -44,7 +46,7 @@ func (y YamlProjectRepository) SaveProject(project project.Project) project.Proj
 	}
 
 	dir := getConfigPath()
-	templateFile := filepath.Join(dir, project.UUID, "template.yaml")
+	templateFile := filepath.Join(dir, project.UUID, templateFileName)
 
 	err := os.MkdirAll(filepath.Dir(templateFile), 0755)
 	errors.EnsureNotNil(err, "Could not create directory")
@@ -71,4 +73,8 @@ func getConfigPath() string {
 	cfg, err := os.UserConfigDir()
 	errors.EnsureNotNil(err, "Could not get user config dir")
 	return filepath.Join(cfg, ".phop")
+}
+
+func (y YamlProjectRepository) PrepareTemplateFilePath(p project.Project) string {
+	return filepath.Join(getConfigPath(), p.UUID, templateFileName)
 }

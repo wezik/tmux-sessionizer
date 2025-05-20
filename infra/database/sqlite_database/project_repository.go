@@ -3,8 +3,10 @@ package sqlite_database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"phopper/domain/errors"
 	"phopper/domain/project"
+	"phopper/domain/project/session_template"
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
@@ -32,7 +34,7 @@ func (_ SqliteProjectRepository) GetProjects() []project.Project {
 
 		project := project.Project{
 			UUID: uuid,
-			Session: project.SessionTemplate{Name: name, Path: path},
+			Session: session_template.SessionTemplate{Name: name, Path: path},
 		}
 		projects = append(projects, project)
 	}
@@ -83,4 +85,12 @@ func (_ SqliteProjectRepository) DeleteProject(uuid string) {
 
 	_, err := db.Exec(`DELETE FROM projects WHERE uuid = ?;`, uuid)
 	errors.EnsureNotNil(err, "Could not delete project")
+}
+
+func (_ SqliteProjectRepository) PrepareTemplateFilePath(p project.Project) string {
+	// TODO: this should prepare a temp editable file that will be deleted when the editor is closed
+	// this is a bit tricky and to be figured out for now I am focusing on the yaml storage
+	fmt.Println("This part of the code is not yet implemented")
+	os.Exit(1)
+	return ""
 }

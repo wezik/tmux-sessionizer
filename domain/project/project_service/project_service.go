@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"phopper/domain/globals"
 	"phopper/domain/project"
+	"phopper/domain/project/session_template/template_service"
 )
 
 // Create
@@ -15,7 +16,7 @@ type CreateProjectCommand struct {
 func CreateProject(cmd CreateProjectCommand) project.Project {
 	repo := globals.Get().ProjectRepository
 
-	new_project := project.New(cmd.Cwd, cmd.Cwd)
+	new_project := project.New(cmd.Cwd)
 	saved := repo.SaveProject(new_project)
 
 	fmt.Println("Successfully created", saved.Session.Name, "template")
@@ -48,8 +49,8 @@ func ListAndEdit(editor string) {
 	selected, err := selectProject()
 	// this means a search should just be canceled
 	if err != nil { return }
-	fmt.Println("Editing:", selected)
-	fmt.Println("TODO: create temp file and open it in editor, after save and pull changes")
+
+	template_service.EditTemplate(editor, selected)
 }
 
 // Helper functions
