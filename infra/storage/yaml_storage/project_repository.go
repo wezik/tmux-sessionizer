@@ -1,7 +1,6 @@
 package yaml_storage
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"phopper/domain/errors"
@@ -16,6 +15,22 @@ type YamlProjectRepository struct{}
 
 const templateFileName = "template.yaml"
 
+func (y YamlProjectRepository) GetProject(uuid string) project.Project {
+	path := getConfigPath()
+	projectDir := filepath.Join(path, uuid)
+	templateFile := filepath.Join(projectDir, templateFileName)
+
+	f, err := os.ReadFile(templateFile)
+	errors.EnsureNotNil(err, "Could not read template file")
+
+	var p project.Project
+	yaml.Unmarshal(f, &p)
+
+	p.UUID = uuid
+
+	return p
+}
+
 func (y YamlProjectRepository) GetProjects() []project.Project {
 	dir := getConfigPath()
 
@@ -24,7 +39,9 @@ func (y YamlProjectRepository) GetProjects() []project.Project {
 
 		// create and retry on fail
 		if err != nil {
-			createConfigDir()
+			path := getConfigPath()
+			err := os.MkdirAll(path, 0755)
+			errors.EnsureNotNil(err, "Could not create config dir")
 			files, err = os.ReadDir(dir)
 		}
 
@@ -34,7 +51,6 @@ func (y YamlProjectRepository) GetProjects() []project.Project {
 
 	projects := make([]project.Project, 0)
 
-	migrated := 0
 	for _, file := range files {
 		if file.IsDir() {
 			templateFile := filepath.Join(dir, file.Name(), templateFileName)
@@ -50,14 +66,9 @@ func (y YamlProjectRepository) GetProjects() []project.Project {
 			// on version mismatch, save with defaults before adding to projects
 			if p.Session.Version != template.VERSION {
 				p = y.SaveProject(p.WithDefaults())
-				migrated++
 			}
 			projects = append(projects, p)
 		}
-	}
-
-	if migrated > 0 {
-		fmt.Println("Migrated", migrated, "templates to version", template.VERSION)
 	}
 
 	return projects
@@ -68,10 +79,13 @@ func (y YamlProjectRepository) SaveProject(project project.Project) project.Proj
 		project.UUID = uuid.New().String()
 	}
 
-	dir := getConfigPath()
-	templateFile := filepath.Join(dir, project.UUID, templateFileName)
+	path := getConfigPath()
+	projectDir := filepath.Join(path, project.UUID)
 
-	createConfigDir()
+	err := os.MkdirAll(projectDir, 0755)
+	errors.EnsureNotNil(err, "Could not create config dir")
+
+	templateFile := filepath.Join(projectDir, templateFileName)
 
 	f, err := os.Create(templateFile)
 	errors.EnsureNotNil(err, "Could not create template file")
@@ -99,10 +113,4 @@ func getConfigPath() string {
 	cfg, err := os.UserConfigDir()
 	errors.EnsureNotNil(err, "Could not get user config dir")
 	return filepath.Join(cfg, ".phop", "templates")
-}
-
-func createConfigDir() {
-	path := getConfigPath()
-	err := os.MkdirAll(path, 0755)
-	errors.EnsureNotNil(err, "Could not create config dir")
 }

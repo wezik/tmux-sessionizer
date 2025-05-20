@@ -4,6 +4,7 @@ import "phopper/domain/project"
 
 type ProjectRepository interface {
 	GetProjects() []project.Project
+	GetProject(string) project.Project
 	SaveProject(project.Project) project.Project
 	DeleteProject(string)
 	PrepareTemplateFilePath(project.Project) string

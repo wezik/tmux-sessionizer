@@ -15,6 +15,10 @@ func EditTemplate(p project.Project, editor string) {
 	templatePath := repo.PrepareTemplateFilePath(p)
 
 	runEditor(editor, templatePath)
+
+	newProject := repo.GetProject(p.UUID)
+	// save should validate the template and try to fix template if needed
+	repo.SaveProject(newProject)
 }
 
 func runEditor(editor string, filePath string) {
