@@ -91,7 +91,7 @@ func (y YamlProjectRepository) SaveProject(project project.Project) project.Proj
 	errors.EnsureNotNil(err, "Could not create template file")
 	defer f.Close()
 
-	marshalled, err := yaml.Marshal(project.WithDefaults())
+	marshalled, err := yaml.MarshalWithOptions(project.WithDefaults(), yaml.IndentSequence(true))
 	errors.EnsureNotNil(err, "Could not marshal project")
 
 	_, err = f.Write(marshalled)
