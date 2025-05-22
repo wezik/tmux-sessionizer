@@ -21,11 +21,12 @@ With a fuzzy searchable (fzf) list of projects, I can jump into any project in s
 - [fzf](https://github.com/junegunn/fzf)
 - [tmux](https://github.com/tmux/tmux)
 
-## Installation from source (requires Go installed)
+## System wide installation from source (requires Go installed)
 ```bash
 git clone https://github.com/wezik/tmux-sessionizer.git
 cd tmux-sessionizer
-./install.sh
+go build -o ./build/phop
+sudo mv ./build/phop /usr/local/bin/
 ```
 
 ## Usage

@@ -10,12 +10,13 @@ import (
 	"phopper/domain/shell"
 )
 
-type TmuxClient struct{
+type TmuxClient struct {
 	ShellRunner shell.Runner
 }
 
 func NewTmuxClient() *TmuxClient {
 	return &TmuxClient{
+		// TODO move cmd runs to use the shell runner
 		ShellRunner: shell.NewDefaultRunner(),
 	}
 }

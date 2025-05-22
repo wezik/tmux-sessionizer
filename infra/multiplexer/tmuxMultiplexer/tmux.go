@@ -4,7 +4,7 @@ import (
 	"phopper/domain/project"
 )
 
-type Tmux struct{
+type Tmux struct {
 	Client *TmuxClient
 }
 
