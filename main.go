@@ -1,7 +1,10 @@
 package main
 
-import "phopper/cli"
+import (
+	"os"
+	"phopper/handlers"
+)
 
 func main() {
-	cli.Run()
+	handlers.NewProjectHandler().Run(os.Args[1:])
 }

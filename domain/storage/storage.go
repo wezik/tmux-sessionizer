@@ -1,7 +1,10 @@
 package storage
 
-import "phopper/domain/storage/repository"
+import (
+	"phopper/domain/project"
+)
 
 type Storage interface {
-	GetProjectRepository() repository.ProjectRepository
+	GetProjectRepository() ProjectRepository
+	PrepareTemplateFile(p *project.Project) (string, error)
 }

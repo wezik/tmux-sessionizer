@@ -16,36 +16,25 @@ type Template struct {
 	Windows      []Window `yaml:"windows"`
 }
 
-func New(path string) Template {
-	return Template{Root: path}.WithDefaults()
-}
-
-func (s Template) WithDefaults() Template {
-	if s.Root == "" {
-		path, err := os.UserHomeDir()
-		if err != nil {
+func NewTemplate(root string, name string) *Template {
+	if root == "" {
+		if home, err := os.UserHomeDir(); err == nil {
+			root = home
+		} else {
 			errors.EnsureNotNil(err, "Could not get user home dir")
 		}
-		s.Root = path
 	}
 
-	if s.Name == "" {
-		s.Name = s.Root
+	if name == "" {
+		name = root
 	}
 
-	if s.Version != VERSION {
-		s.Version = VERSION
+	return &Template{
+		Version: VERSION,
+		Name:    name,
+		Root:    root,
+		Windows: []Window{NewWindow("default")},
 	}
-
-	if len(s.Windows) == 0 {
-		s.Windows = append(s.Windows, Window{Name: "default"})
-	}
-
-	for i := range s.Windows {
-		s.Windows[i] = s.Windows[i].WithDefaults()
-	}
-
-	return s
 }
 
 type Window struct {
@@ -55,11 +44,8 @@ type Window struct {
 	Panes    map[string]Pane `yaml:"panes,omitempty"`
 }
 
-func (w Window) WithDefaults() Window {
-	for name, pane := range w.Panes {
-		w.Panes[name] = pane.WithDefaults()
-	}
-	return w
+func NewWindow(name string) Window {
+	return Window{Name: name}
 }
 
 type Pane struct {
@@ -68,6 +54,6 @@ type Pane struct {
 	Commands []string `yaml:"run,omitempty"`
 }
 
-func (p Pane) WithDefaults() Pane {
-	return p
+func NewPane(name string) Pane {
+	return Pane{Name: name}
 }
