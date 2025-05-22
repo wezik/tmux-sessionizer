@@ -75,13 +75,17 @@ func (_ TmuxClient) isInsideTmuxSession() bool {
 	return len(os.Getenv("TMUX")) != 0
 }
 
-func (_ TmuxClient) newWindow(session string, window *template.Window) {
+func (_ TmuxClient) newWindow(session string, window *template.Window, templateRoot string) {
 	cmd := exec.Command("tmux", "new-window", "-d")
 	cmd.Args = append(cmd.Args, "-t", session)
 	cmd.Args = append(cmd.Args, "-n", window.Name)
 	if window.Root != "" {
 		cmd.Args = append(cmd.Args, "-c", window.Root)
+	} else {
+		cmd.Args = append(cmd.Args, "-c", templateRoot)
 	}
+
+	fmt.Println(cmd.Args)
 
 	err := cmd.Run()
 	errors.EnsureNotNil(err, "Could not create new window")

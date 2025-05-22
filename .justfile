@@ -1,5 +1,6 @@
 # runs the app
 run *args:
+  just build
   ./build/phop {{args}}
 
 # builds the app
@@ -8,7 +9,7 @@ build:
 
 # installs the app on the system
 install:
-  go build -o phop
+  just build
   sudo cp ./build/phop /usr/local/bin/
 
 # formats all files with go formatter

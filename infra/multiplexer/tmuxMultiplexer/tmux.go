@@ -21,7 +21,7 @@ func (t *Tmux) AssembleAndAttach(project *project.Project) {
 		for i, window := range project.Template.Windows {
 			// skip default window
 			if i != 0 {
-				t.Client.newWindow(session, &window)
+				t.Client.newWindow(session, &window, project.Template.Root)
 			}
 
 			for _, command := range project.Template.Commands {
