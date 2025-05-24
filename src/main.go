@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	svc := service.NewService()
+	svc := service.NewService(nil, nil)
 	cli.NewCli(svc).Run(os.Args[1:])
 }
