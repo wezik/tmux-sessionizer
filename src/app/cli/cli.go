@@ -37,12 +37,7 @@ func (c *Cli) Run(args []string) {
 }
 
 func (c *Cli) selectCmd(args []string) {
-	name := func() string {
-		if len(args) > 0 {
-			return args[0]
-		}
-		return ""
-	}()
+	name := resolveName(args, "")
 	c.svc.SelectAndOpenProject(name)
 }
 
@@ -59,26 +54,29 @@ func (c *Cli) createCmd(args []string) {
 		return wd
 	}()
 
-	name := func() string {
-		if len(args) > 0 {
-			return args[0]
-		}
-		return cwd
-	}()
-
+	name := resolveName(args, cwd)
 	c.svc.CreateProject(cwd, name)
 }
 
 func (c *Cli) deleteCmd(args []string) {
-	fmt.Println("delete handler")
+	name := resolveName(args, "")
+	c.svc.DeleteProject(name)
 }
 
 func (c *Cli) editCmd(args []string) {
-	fmt.Println("edit handler")
+	name := resolveName(args, "")
+	c.svc.EditProject(name)
+}
+
+func resolveName(args []string, defaultValue string) string {
+	if len(args) > 0 {
+		return args[0]
+	}
+	return defaultValue
 }
 
 func (c *Cli) helpCmd() {
-	fmt.Println("help section")
+	fmt.Println(helpMessage)
 }
 
 var (
