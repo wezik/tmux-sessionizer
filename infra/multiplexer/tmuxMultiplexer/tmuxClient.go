@@ -85,8 +85,6 @@ func (_ TmuxClient) newWindow(session string, window *template.Window, templateR
 		cmd.Args = append(cmd.Args, "-c", templateRoot)
 	}
 
-	fmt.Println(cmd.Args)
-
 	err := cmd.Run()
 	errors.EnsureNotNil(err, "Could not create new window")
 }

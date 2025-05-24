@@ -5,7 +5,7 @@ run *args:
 
 # builds the app
 build:
-  go build -o ./build/phop
+  go build -o build/phop ./src/
 
 # installs the app on the system
 install:
@@ -15,3 +15,7 @@ install:
 # formats all files with go formatter
 fmt:
   go fmt ./...
+
+# runs test suite
+test *args:
+  go test ./test/... {{args}}
