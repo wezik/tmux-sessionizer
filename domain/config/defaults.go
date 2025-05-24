@@ -5,7 +5,7 @@ type Config struct {
 }
 
 // TODO this should be loaded from some sort of config file
-const settingsEditor = ""
+const settingsEditor = "nvim"
 
 func GetDefaults() Config {
 	editor := settingsEditor

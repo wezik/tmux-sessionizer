@@ -37,7 +37,13 @@ func (c *Cli) Run(args []string) {
 }
 
 func (c *Cli) selectCmd(args []string) {
-	fmt.Println("select handler")
+	name := func() string {
+		if len(args) > 0 {
+			return args[0]
+		}
+		return ""
+	}()
+	c.svc.SelectAndOpenProject(name)
 }
 
 func (c *Cli) createCmd(args []string) {
