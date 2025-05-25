@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"os"
 	. "phopper/src/domain/model"
 	. "phopper/src/domain/utils"
 )
@@ -16,13 +15,13 @@ type Service interface {
 }
 
 type ServiceImpl struct {
-	sc Selector
+	sl Selector
 	mu Multiplexer
 	st Storage
 }
 
-func NewService(sc Selector, mu Multiplexer, st Storage) *ServiceImpl {
-	return &ServiceImpl{sc: sc, mu: mu, st: st}
+func NewService(sl Selector, mu Multiplexer, st Storage) *ServiceImpl {
+	return &ServiceImpl{sl: sl, mu: mu, st: st}
 }
 
 type Selector interface {
@@ -47,7 +46,7 @@ func (s *ServiceImpl) CreateProject(cwd, name string) {
 	window, err := NewWindow("shell")
 	EnsureWithErr(err == nil, err)
 
-	template, err := NewTemplate(name, cwd, []Window{*window})
+	template, err := NewTemplate(cwd, []Window{*window})
 	EnsureWithErr(err == nil, err)
 
 	project, err := NewProject(name, *template)
@@ -58,29 +57,17 @@ func (s *ServiceImpl) CreateProject(cwd, name string) {
 }
 
 func (s *ServiceImpl) SelectAndOpenProject(name string) {
-	project := func() *Project {
-		if name == "" {
-			projects, err := s.st.List()
-			EnsureWithErr(err == nil, err)
+	project, err := s.findOrSelect(name)
 
-			selected, err := s.selectProject(projects)
-			if err == ErrSelectorCancelled {
-				fmt.Println("Cancelled")
-				os.Exit(0)
-			} else if err != nil {
-				panic(err)
-			}
-
-			return selected
-		} else {
-			project, err := s.st.Find(name)
-			EnsureWithErr(err == nil, err)
-
-			return project
+	if err != nil {
+		if err == ErrSelectorCancelled {
+			fmt.Println("Operation cancelled")
+			return
 		}
-	}()
+		panic(err)
+	}
 
-	err := s.mu.AttachProject(project)
+	err = s.mu.AttachProject(project)
 	EnsureWithErr(err == nil, err)
 }
 
@@ -92,15 +79,33 @@ func (s *ServiceImpl) EditProject(name string) {
 	panic("unimplemented")
 }
 
+func (s *ServiceImpl) findOrSelect(name string) (*Project, error) {
+	if name != "" {
+		return s.st.Find(name)
+	}
+
+	projects, err := s.st.List()
+
+	selected, err := s.selectProject(projects)
+	if err == ErrSelectorCancelled {
+		return nil, err
+	}
+
+	Ensure(err == nil, "Unknown error occured while selecting the project")
+
+	return selected, nil
+}
+
 func (s *ServiceImpl) selectProject(items []*Project) (*Project, error) {
 	itemsStringified := make([]string, len(items))
 	itemsMap := make(map[string]*Project)
+
 	for i, item := range items {
 		itemsStringified[i] = item.Name
 		itemsMap[item.Name] = item
 	}
 
-	selectedString, err := s.sc.SelectFrom(itemsStringified)
+	selectedString, err := s.sl.SelectFrom(itemsStringified)
 	if err == ErrSelectorCancelled {
 		return nil, err // in case of cancellation, propagate the error upwards
 	}

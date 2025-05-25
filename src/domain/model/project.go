@@ -20,7 +20,9 @@ type Project struct {
 }
 
 type Template struct {
-	Name         string   `yaml:"name"`
+	// Template name is used to specify the session name in multiplexer,
+	// if not specified, the project name will be used
+	Name         string   `yaml:"name,omitempty"`
 	Root         string   `yaml:"root"`
 	Commands     []string `yaml:"run,omitempty"`
 	ActiveWindow string   `yaml:"active_window,omitempty"`
@@ -54,17 +56,12 @@ func NewProject(name string, template Template) (*Project, error) {
 	}, nil
 }
 
-func NewTemplate(name string, root string, windows []Window) (*Template, error) {
-	if name == "" {
-		return nil, ErrInvalidName
-	}
-
+func NewTemplate(root string, windows []Window) (*Template, error) {
 	if len(windows) == 0 {
 		return nil, ErrNeedsWindow
 	}
 
 	return &Template{
-		Name:    name,
 		Root:    root,
 		Windows: windows,
 	}, nil

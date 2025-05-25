@@ -12,6 +12,9 @@ type MockSelector struct {
 func (s *MockSelector) SelectFrom(items []string) (string, error) {
 	s.SelectFromParam1 = items
 	s.SelectFromCalls++
+	if s.SelectFromErr != nil {
+		return "", s.SelectFromErr
+	}
 	return s.SelectFromReturn, nil
 }
 
