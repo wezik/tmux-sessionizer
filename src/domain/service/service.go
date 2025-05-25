@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	. "phopper/src/domain/model"
 	. "phopper/src/domain/utils"
@@ -41,6 +42,14 @@ type Storage interface {
 	Find(name string) (*Project, error)
 	Save(t *Project) error
 	Delete(uuid string) error
+}
+
+type FileSystem interface {
+	MkdirAll(path string) error
+	ReadDir(path string) ([]os.DirEntry, error)
+	ReadFile(path string) ([]byte, error)
+	WriteFile(path string, data []byte) error
+	RemoveAll(path string) error
 }
 
 func (s *ServiceImpl) CreateProject(cwd, name string) {

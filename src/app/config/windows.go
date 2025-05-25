@@ -8,6 +8,6 @@ import (
 )
 
 var (
-	dll32 = filepath.Join(os.Getenv("SYSTEMROOT"), "System32", "rundll32.exe")
+	dll32         = filepath.Join(os.Getenv("SYSTEMROOT"), "System32", "rundll32.exe")
 	defaultEditor = dll32 + " url.dll,FileProtocolHandler"
 )
