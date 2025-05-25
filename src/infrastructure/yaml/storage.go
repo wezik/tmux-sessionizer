@@ -1,13 +1,16 @@
 package yaml
 
 import (
+	"phopper/src/app/config"
 	. "phopper/src/domain/model"
 )
 
-type YamlStorage struct{}
+type YamlStorage struct{
+	config *config.Config
+}
 
-func NewYamlStorage() *YamlStorage {
-	return &YamlStorage{}
+func NewYamlStorage(config *config.Config) *YamlStorage {
+	return &YamlStorage{config: config}
 }
 
 func (s *YamlStorage) List() ([]*Project, error) {
