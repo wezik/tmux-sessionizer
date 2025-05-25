@@ -1,8 +1,8 @@
 package service
 
 import (
-	"errors"
 	"fmt"
+	"os/exec"
 	. "phopper/src/domain/model"
 	. "phopper/src/domain/utils"
 )
@@ -25,11 +25,15 @@ func NewService(sl Selector, mu Multiplexer, st Storage) *ServiceImpl {
 }
 
 type Selector interface {
-	SelectFrom(items []string) (string, error)
+	SelectFrom(items []string, prompt string) (string, error)
 }
 
 type Multiplexer interface {
 	AttachProject(p *Project) error
+}
+
+type CommandExecutor interface {
+	Execute(cmd *exec.Cmd) (string, error, int)
 }
 
 type Storage interface {
@@ -57,7 +61,7 @@ func (s *ServiceImpl) CreateProject(cwd, name string) {
 }
 
 func (s *ServiceImpl) SelectAndOpenProject(name string) {
-	project, err := s.findOrSelect(name)
+	project, err := s.findOrSelect(name, "Select project to open > ")
 
 	if err != nil {
 		if err == ErrSelectorCancelled {
@@ -72,7 +76,7 @@ func (s *ServiceImpl) SelectAndOpenProject(name string) {
 }
 
 func (s *ServiceImpl) DeleteProject(name string) {
-	project, err := s.findOrSelect(name)
+	project, err := s.findOrSelect(name, "Select project to delete > ")
 
 	if err != nil {
 		if err == ErrSelectorCancelled {
@@ -90,14 +94,14 @@ func (s *ServiceImpl) EditProject(name string) {
 	panic("unimplemented")
 }
 
-func (s *ServiceImpl) findOrSelect(name string) (*Project, error) {
+func (s *ServiceImpl) findOrSelect(name string, prompt string) (*Project, error) {
 	if name != "" {
 		return s.st.Find(name)
 	}
 
 	projects, err := s.st.List()
 
-	selected, err := s.selectProject(projects)
+	selected, err := s.selectProject(projects, prompt)
 	if err == ErrSelectorCancelled {
 		return nil, err
 	}
@@ -107,7 +111,7 @@ func (s *ServiceImpl) findOrSelect(name string) (*Project, error) {
 	return selected, nil
 }
 
-func (s *ServiceImpl) selectProject(items []*Project) (*Project, error) {
+func (s *ServiceImpl) selectProject(items []*Project, prompt string) (*Project, error) {
 	itemsStringified := make([]string, len(items))
 	itemsMap := make(map[string]*Project)
 
@@ -116,7 +120,7 @@ func (s *ServiceImpl) selectProject(items []*Project) (*Project, error) {
 		itemsMap[item.Name] = item
 	}
 
-	selectedString, err := s.sl.SelectFrom(itemsStringified)
+	selectedString, err := s.sl.SelectFrom(itemsStringified, prompt)
 	if err == ErrSelectorCancelled {
 		return nil, err // in case of cancellation, propagate the error upwards
 	}
@@ -132,7 +136,3 @@ func (s *ServiceImpl) selectProject(items []*Project) (*Project, error) {
 
 	return selected, nil
 }
-
-var (
-	ErrSelectorCancelled = errors.New("Selector cancelled")
-)
