@@ -2,6 +2,7 @@ package shell
 
 import "os/exec"
 
+// command executor wrapper to make it detachable from the business logic
 type CommandExecutorImpl struct{}
 
 func NewCommandExecutor() *CommandExecutorImpl {

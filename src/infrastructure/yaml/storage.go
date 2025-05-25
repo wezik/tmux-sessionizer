@@ -1,33 +1,115 @@
 package yaml
 
 import (
-	"phopper/src/app/config"
+	"fmt"
+	"path/filepath"
+	. "phopper/src/app/config"
 	. "phopper/src/domain/model"
+	. "phopper/src/domain/service"
+
+	"github.com/goccy/go-yaml"
+	"github.com/google/uuid"
 )
 
-type YamlStorage struct{
-	config *config.Config
+// TODO: unit tests to freeze the implementation
+// probably will have to add an interface arround the file system operations
+// or struct with function as a field??? Think about that approach
+
+type YamlStorage struct {
+	config Config
+	fs     FileSystem
 }
 
-func NewYamlStorage(config *config.Config) *YamlStorage {
-	return &YamlStorage{config: config}
+func NewYamlStorage(config Config, fileSystem FileSystem) *YamlStorage {
+	return &YamlStorage{config: config, fs: fileSystem}
 }
+
+var (
+	templateFileName = "template.yaml"
+	templatesDirName = "templates"
+)
 
 func (s *YamlStorage) List() ([]*Project, error) {
-	p1 := &Project{Name: "foo"}
-	p2 := &Project{Name: "bar"}
-	p3 := &Project{Name: "baz"}
-	return []*Project{p1, p2, p3}, nil
+	cfgDir := s.config.GetConfigDir()
+
+	templatesDir := filepath.Join(cfgDir, templatesDirName)
+
+	// from what I understand, running os.Stat to check if a dir exists is not really providing
+	// any benefits, and can also introduce weird edge cases, so instead just run mkdir everytime
+	if err := s.fs.MkdirAll(templatesDir); err != nil {
+		return nil, err
+	}
+
+	dirs, err := s.fs.ReadDir(templatesDir)
+	if err != nil {
+		return nil, err
+	}
+
+	var projects []*Project
+
+	for _, dir := range dirs {
+		if !dir.IsDir() {
+			continue
+		}
+
+		templateFile := filepath.Join(templatesDir, dir.Name(), templateFileName)
+		bytes, err := s.fs.ReadFile(templateFile)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		var project Project
+		if err = yaml.Unmarshal(bytes, &project); err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		project.ID = dir.Name()
+		projects = append(projects, &project)
+	}
+
+	return projects, nil
 }
 
 func (s *YamlStorage) Find(name string) (*Project, error) {
-	panic("unimplemented")
+	projects, err := s.List()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, project := range projects {
+		if project.Name == name {
+			return project, nil
+		}
+	}
+
+	return nil, ErrNotFound
 }
 
-func (s *YamlStorage) Save(t *Project) error {
-	panic("unimplemented")
+func (s *YamlStorage) Save(p *Project) error {
+	if p.ID == "" {
+		p.ID = uuid.New().String()
+	}
+
+	cfgDir := s.config.GetConfigDir()
+	templateDir := filepath.Join(cfgDir, templatesDirName, p.ID)
+
+	if err := s.fs.MkdirAll(templateDir); err != nil {
+		return err
+	}
+
+	templateFile := filepath.Join(templateDir, templateFileName)
+	bytes, err := yaml.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	return s.fs.WriteFile(templateFile, bytes)
 }
 
 func (s *YamlStorage) Delete(uuid string) error {
-	panic("unimplemented")
+	cfgDir := s.config.GetConfigDir()
+	templateDir := filepath.Join(cfgDir, templatesDirName, uuid)
+	return s.fs.RemoveAll(templateDir)
 }

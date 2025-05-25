@@ -5,14 +5,18 @@ import (
 	. "phopper/src/domain/utils"
 )
 
-type Config struct {
-	configDir string
-	editor string
+type Config interface {
+	GetConfigDir() string
 }
 
-func NewConfig(configDir string) *Config {
+type ConfigImpl struct {
+	configDir string
+	editor    string
+}
 
-	cfg := &Config{
+func NewConfig(configDir string) *ConfigImpl {
+
+	cfg := &ConfigImpl{
 		configDir: configDir,
 	}
 
@@ -31,4 +35,4 @@ func NewConfig(configDir string) *Config {
 	return cfg
 }
 
-func (c *Config) GetConfigDir() string { return c.configDir }
+func (c *ConfigImpl) GetConfigDir() string { return c.configDir }

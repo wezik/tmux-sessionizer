@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -75,6 +76,18 @@ func NewWindow(name string) (*Window, error) {
 	return &Window{
 		Name: name,
 	}, nil
+}
+
+func (w Window) String() string {
+	return fmt.Sprintf("{ Name: %s }", w.Name)
+}
+
+func (t Template) String() string {
+	return fmt.Sprintf("{ Name: %s, Root: %s, Commands: %s, ActiveWindow: %s, Windows: %s }", t.Name, t.Root, t.Commands, t.ActiveWindow, t.Windows)
+}
+
+func (p Project) String() string {
+	return fmt.Sprintf("{ ID: %s, Name: %s, Version: %d, Template: %s }", p.ID, p.Name, p.Version, p.Template)
 }
 
 var (
