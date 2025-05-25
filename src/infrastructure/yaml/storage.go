@@ -11,7 +11,10 @@ func NewYamlStorage() *YamlStorage {
 }
 
 func (s *YamlStorage) List() ([]*Project, error) {
-	panic("unimplemented")
+	p1 := &Project{Name: "foo"}
+	p2 := &Project{Name: "bar"}
+	p3 := &Project{Name: "baz"}
+	return []*Project{p1, p2, p3}, nil
 }
 
 func (s *YamlStorage) Find(name string) (*Project, error) {

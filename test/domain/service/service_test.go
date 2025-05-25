@@ -202,7 +202,6 @@ func Test_Service(t *testing.T) {
 
 			Assert(t, sl.SelectFromCalls == 0, "Selector should not be called")
 
-
 			Assert(t, st.DeleteCalls == 1, "Delete should be called once")
 
 			deleteParam := st.DeleteParam1

@@ -4,18 +4,17 @@ import . "phopper/src/domain/model"
 
 type MockSelector struct {
 	SelectFromParam1 []string
+	SelectFromParam2 string
 	SelectFromCalls  int
 	SelectFromReturn string
 	SelectFromErr    error
 }
 
-func (s *MockSelector) SelectFrom(items []string) (string, error) {
+func (s *MockSelector) SelectFrom(items []string, prompt string) (string, error) {
 	s.SelectFromParam1 = items
+	s.SelectFromParam2 = prompt
 	s.SelectFromCalls++
-	if s.SelectFromErr != nil {
-		return "", s.SelectFromErr
-	}
-	return s.SelectFromReturn, nil
+	return s.SelectFromReturn, s.SelectFromErr
 }
 
 type MockMultiplexer struct {
@@ -48,19 +47,13 @@ type MockStorage struct {
 
 func (s *MockStorage) List() ([]*Project, error) {
 	s.ListCalls++
-	if s.ListErr != nil {
-		return nil, s.ListErr
-	}
-	return s.ListReturn, nil
+	return s.ListReturn, s.ListErr
 }
 
 func (s *MockStorage) Find(name string) (*Project, error) {
 	s.FindParam1 = name
 	s.FindCalls++
-	if s.FindErr != nil {
-		return nil, s.FindErr
-	}
-	return s.FindReturn, nil
+	return s.FindReturn, s.FindErr
 }
 
 func (s *MockStorage) Save(t *Project) error {
