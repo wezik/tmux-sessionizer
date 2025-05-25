@@ -143,7 +143,8 @@ func Test_Service(t *testing.T) {
 
 			// then
 			Assert(t, st.FindCalls == 1, "Find should be called once")
-			Assert(t, st.FindParam1 == name, "Find should be called with %s", name)
+			findParam := st.FindParam1
+			Assert(t, findParam == name, "Find param name should be %s is %s", name, findParam)
 
 			Assert(t, sl.SelectFromCalls == 0, "Selector should not be called")
 
@@ -169,8 +170,131 @@ func Test_Service(t *testing.T) {
 			svc.SelectAndOpenProject("")
 
 			// then
+			Assert(t, st.FindCalls == 0, "Find should not be called")
 			Assert(t, sl.SelectFromCalls == 1, "Selector should be called once")
 			Assert(t, mu.AttachProjectCalls == 0, "The project should not be attached")
+		})
+	})
+
+	t.Run("delete project", func(t *testing.T) {
+		t.Run("finds and deletes project", func(t *testing.T) {
+			// given
+			name := "foobar"
+			project := &Project{ID: "1234", Name: name}
+
+			sl := &MockSelector{}
+
+			mu := &MockMultiplexer{}
+
+			st := &MockStorage{}
+			st.FindReturn = project
+
+			svc := NewService(sl, mu, st)
+
+			// when
+			svc.DeleteProject(name)
+
+			// then
+			Assert(t, st.FindCalls == 1, "Find should be called once")
+
+			findParam := st.FindParam1
+			Assert(t, findParam == name, "Find param name should be %s is %s", name, findParam)
+
+			Assert(t, sl.SelectFromCalls == 0, "Selector should not be called")
+
+
+			Assert(t, st.DeleteCalls == 1, "Delete should be called once")
+
+			deleteParam := st.DeleteParam1
+			Assert(t, deleteParam == project.ID, "Delete param ID should be %s is %s", project.ID, deleteParam)
+		})
+
+		t.Run("selects from selector and deletes project", func(t *testing.T) {
+			// given
+			name := "foobar"
+			project := &Project{ID: "1234", Name: name}
+			projects := []*Project{project}
+			projectNames := []string{project.Name}
+
+			sl := &MockSelector{}
+			sl.SelectFromReturn = project.Name
+
+			mu := &MockMultiplexer{}
+
+			st := &MockStorage{}
+			st.ListReturn = projects
+
+			svc := NewService(sl, mu, st)
+
+			// when
+			svc.DeleteProject("")
+
+			// then
+			Assert(t, st.FindCalls == 0, "Find should not be called")
+
+			Assert(t, sl.SelectFromCalls == 1, "Selector should be called once")
+
+			selectFromParam := sl.SelectFromParam1
+			slicesEqual := slices.Equal(projectNames, selectFromParam)
+			Assert(t, slicesEqual, "Selector items param should be %s is %s", projectNames, selectFromParam)
+
+			deleteParam := st.DeleteParam1
+			Assert(t, deleteParam == project.ID, "Delete param ID should be %s is %s", project.ID, deleteParam)
+		})
+
+		t.Run("panics when project is not found", func(t *testing.T) {
+			// given
+			name := "foobar"
+			err := ErrNotFound
+
+			sl := &MockSelector{}
+
+			mu := &MockMultiplexer{}
+
+			st := &MockStorage{}
+			st.FindErr = err
+
+			svc := NewService(sl, mu, st)
+
+			// when
+			defer func() {
+				r := recover()
+				Assert(t, r != nil, "The code did not panic")
+				Assert(t, r.(error) == ErrNotFound, "The error should be %s was %s", err, r)
+			}()
+			svc.DeleteProject(name)
+
+			// then
+			Assert(t, st.FindCalls == 1, "Find should be called once")
+			findParam := st.FindParam1
+			Assert(t, findParam == name, "Find param name shoud be %s is %s", name, findParam)
+
+			Assert(t, sl.SelectFromCalls == 0, "Selector should not be called")
+			Assert(t, st.DeleteCalls == 0, "Delete should not be called")
+		})
+
+		t.Run("exit gracefully when selector is cancelled", func(t *testing.T) {
+			// given
+			err := ErrSelectorCancelled
+			listReturn := []*Project{{ID: "1234", Name: "foobar"}}
+
+			sl := &MockSelector{}
+			sl.SelectFromErr = err
+
+			mu := &MockMultiplexer{}
+
+			st := &MockStorage{}
+			st.ListReturn = listReturn
+
+			svc := NewService(sl, mu, st)
+
+			// when
+			svc.DeleteProject("")
+
+			// then
+			Assert(t, st.FindCalls == 0, "Find should not be called")
+			Assert(t, sl.SelectFromCalls == 1, "Selector should be called once")
+			Assert(t, st.DeleteCalls == 0, "Delete should not be called")
 		})
 	})
 }

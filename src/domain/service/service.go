@@ -61,7 +61,7 @@ func (s *ServiceImpl) SelectAndOpenProject(name string) {
 
 	if err != nil {
 		if err == ErrSelectorCancelled {
-			fmt.Println("Operation cancelled")
+			fmt.Println("Select operation cancelled")
 			return
 		}
 		panic(err)
@@ -72,7 +72,18 @@ func (s *ServiceImpl) SelectAndOpenProject(name string) {
 }
 
 func (s *ServiceImpl) DeleteProject(name string) {
-	panic("unimplemented")
+	project, err := s.findOrSelect(name)
+
+	if err != nil {
+		if err == ErrSelectorCancelled {
+			fmt.Println("Delete operation cancelled")
+			return
+		}
+		panic(err)
+	}
+
+	err = s.st.Delete(project.ID)
+	EnsureWithErr(err == nil, err)
 }
 
 func (s *ServiceImpl) EditProject(name string) {
