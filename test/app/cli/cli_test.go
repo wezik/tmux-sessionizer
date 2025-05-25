@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"phopper/src/app/cli"
+	. "phopper/test/utils"
 	"testing"
 )
 
@@ -23,12 +24,8 @@ func Test_CLI(t *testing.T) {
 				cli.Run(args)
 
 				// then
-				if svc.SelectAndOpenProjectCalls != 1 {
-					t.Errorf("SelectAndOpenProject should be called once")
-				}
-				if svc.SelectAndOpenProjectParam1 != "" {
-					t.Errorf("SelectAndOpenProject should be called with empty string")
-				}
+				Assert(t, svc.SelectAndOpenProjectCalls == 1, "SelectAndOpenProject should be called once")
+				Assert(t, svc.SelectAndOpenProjectParam1 == "", "Name should be empty")
 			}
 		})
 
@@ -48,13 +45,9 @@ func Test_CLI(t *testing.T) {
 				cli.Run(args)
 
 				// then
-				if svc.SelectAndOpenProjectCalls != 1 {
-					t.Errorf("SelectAndOpenProject should be called once")
-				}
-
-				if svc.SelectAndOpenProjectParam1 != name {
-					t.Errorf("SelectAndOpenProject should be called with %s", name)
-				}
+				Assert(t, svc.SelectAndOpenProjectCalls == 1, "SelectAndOpenProject should be called once")
+				param := svc.SelectAndOpenProjectParam1
+				Assert(t, param == name, "Name should be %s is %s", name, param)
 			}
 		})
 	})
@@ -79,13 +72,10 @@ func Test_CLI(t *testing.T) {
 				cli.Run(args)
 
 				// then
-				if svc.CreateProjectCalls != 1 {
-					t.Errorf("CreateProject should be called once")
-				}
-
-				if svc.CreateProjectParam2 != svc.CreateProjectParam1 {
-					t.Errorf("Name should default to current working directory")
-				}
+				Assert(t, svc.CreateProjectCalls == 1, "CreateProject should be called once")
+				param1 := svc.CreateProjectParam1
+				param2 := svc.CreateProjectParam2
+				Assert(t, param1 == param2, "Name should default to current working directory")
 			}
 		})
 
@@ -101,13 +91,9 @@ func Test_CLI(t *testing.T) {
 				cli.Run(append(args, name))
 
 				// then
-				if svc.CreateProjectCalls != 1 {
-					t.Errorf("CreateProject should be called once")
-				}
-
-				if svc.CreateProjectParam2 != name {
-					t.Errorf("Name should be %s", name)
-				}
+				Assert(t, svc.CreateProjectCalls == 1, "CreateProject should be called once")
+				param2 := svc.CreateProjectParam2
+				Assert(t, param2 == name, "Name should be %s is %s", name, param2)
 			}
 		})
 
@@ -124,17 +110,12 @@ func Test_CLI(t *testing.T) {
 				cli.Run(append(args, name, cwd))
 
 				// then
-				if svc.CreateProjectCalls != 1 {
-					t.Errorf("CreateProject should be called once")
-				}
+				Assert(t, svc.CreateProjectCalls == 1, "CreateProject should be called once")
 
-				if svc.CreateProjectParam1 != cwd {
-					t.Errorf("Cwd should be %s", cwd)
-				}
-
-				if svc.CreateProjectParam2 != name {
-					t.Errorf("Name should be %s", name)
-				}
+				param1 := svc.CreateProjectParam1
+				Assert(t, param1 == cwd, "Cwd should be %s is %s", cwd, param1)
+				param2 := svc.CreateProjectParam2
+				Assert(t, param2 == name, "Name should be %s is %s", name, param2)
 			}
 		})
 	})
@@ -155,13 +136,9 @@ func Test_CLI(t *testing.T) {
 				cli.Run(args)
 
 				// then
-				if svc.DeleteProjectCalls != 1 {
-					t.Errorf("DeleteProject should be called once")
-				}
-
-				if svc.DeleteProjectParam1 != "" {
-					t.Errorf("DeleteProject should be called with empty string")
-				}
+				Assert(t, svc.DeleteProjectCalls == 1, "DeleteProject should be called once")
+				param := svc.DeleteProjectParam1
+				Assert(t, param == "", "Name should be empty")
 			}
 		})
 
@@ -177,13 +154,9 @@ func Test_CLI(t *testing.T) {
 				cli.Run(append(args, name))
 
 				// then
-				if svc.DeleteProjectCalls != 1 {
-					t.Errorf("DeleteProject should be called once")
-				}
-
-				if svc.DeleteProjectParam1 != name {
-					t.Errorf("DeleteProject should be called with %s", name)
-				}
+				Assert(t, svc.DeleteProjectCalls == 1, "DeleteProject should be called once")
+				param := svc.DeleteProjectParam1
+				Assert(t, param == name, "Name should be %s is %s", name, param)
 			}
 		})
 	})
@@ -204,13 +177,8 @@ func Test_CLI(t *testing.T) {
 				cli.Run(args)
 
 				// then
-				if svc.EditProjectCalls != 1 {
-					t.Errorf("EditProject should be called once")
-				}
-
-				if svc.EditProjectParam1 != "" {
-					t.Errorf("EditProject should be called with empty string")
-				}
+				Assert(t, svc.EditProjectCalls == 1, "EditProject should be called once")
+				Assert(t, svc.EditProjectParam1 == "", "Name should be empty")
 			}
 		})
 
@@ -226,13 +194,9 @@ func Test_CLI(t *testing.T) {
 				cli.Run(append(args, name))
 
 				// then
-				if svc.EditProjectCalls != 1 {
-					t.Errorf("EditProject should be called once")
-				}
-
-				if svc.EditProjectParam1 != name {
-					t.Errorf("EditProject should be called with %s", name)
-				}
+				Assert(t, svc.EditProjectCalls == 1, "EditProject should be called once")
+				param := svc.EditProjectParam1
+				Assert(t, param == name, "Name should be %s is %s", name, param)
 			}
 		})
 	})

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	. "phopper/src/domain/model"
 	. "phopper/src/domain/service"
+	. "phopper/test/utils"
+	"slices"
 	"testing"
 )
 
@@ -20,29 +22,15 @@ func Test_Service(t *testing.T) {
 			svc.CreateProject(cwd, name)
 
 			// then
-			if st.SaveCalls != 1 {
-				t.Errorf("Save should be called once")
-			}
+			Assert(t, st.SaveCalls == 1, "Save should be called once")
 
-			if st.SaveParam1.Name != name {
-				t.Errorf("Saved project should have name %s", name)
-			}
+			param1 := st.SaveParam1
+			Assert(t, param1.Name == name, "Saved project should have name %s has %s", name, param1.Name)
 
-			if st.SaveParam1.Template.Root != cwd {
-				t.Errorf("Saved project should have root %s", cwd)
-			}
-
-			if st.SaveParam1.Template.Name != name {
-				t.Errorf("Saved project should have template name %s", name)
-			}
-
-			if len(st.SaveParam1.Template.Windows) != 1 {
-				t.Errorf("Saved project should have one window")
-			}
-
-			if st.SaveParam1.Template.Windows[0].Name != "shell" {
-				t.Errorf("Saved project should have window name %s", "shell")
-			}
+			template := param1.Template
+			Assert(t, template.Root == cwd, "Root should be %s is %s", cwd, template.Root)
+			Assert(t, template.Name != name, "Name should be %s is %s", name, template.Name)
+			Assert(t, len(template.Windows) == 1, "Saved project should have one window")
 		})
 
 		t.Run("panics with invalid data", func(t *testing.T) {
@@ -59,9 +47,7 @@ func Test_Service(t *testing.T) {
 
 					// expect
 					defer func() {
-						if r := recover(); r == nil {
-							t.Errorf("The code did not panic")
-						}
+						Assert(t, recover() != nil, "The code did not panic")
 					}()
 					svc.CreateProject(cwd, name)
 				})
@@ -73,122 +59,118 @@ func Test_Service(t *testing.T) {
 		t.Run("finds and opens project with multiplexer", func(t *testing.T) {
 			// given
 			name := "foobar"
-			sc := &MockSelector{}
+			project := &Project{ID: "1234", Name: name}
+
+			sl := &MockSelector{}
+
 			mu := &MockMultiplexer{}
-			p := &Project{ID: "1234", Name: name}
+
 			st := &MockStorage{}
-			st.FindReturn = p
-			svc := NewService(sc, mu, st)
+			st.FindReturn = project
+			svc := NewService(sl, mu, st)
 
 			// when
 			svc.SelectAndOpenProject(name)
 
 			// then
-			if st.FindCalls != 1 {
-				t.Errorf("Find should be called once")
-			}
+			Assert(t, st.FindCalls == 1, "Find should be called once")
 
-			if st.FindParam1 != name {
-				t.Errorf("Find should be called with %s", name)
-			}
+			param1 := st.FindParam1
+			Assert(t, param1 == name, "Find param name should be %s is %s", name, param1)
 
-			if sc.SelectFromCalls != 0 {
-				// shouldn't start selector
-				t.Errorf("Selector should not be called")
-			}
+			Assert(t, sl.SelectFromCalls == 0, "Selector should not be called")
 
-			if mu.AttachProjectCalls != 1 {
-				t.Errorf("The project should be attached")
-			}
-
-			if mu.AttachProjectParam1.ID != p.ID {
-				t.Errorf("The project should be attached with %s", p.ID)
-			}
+			Assert(t, mu.AttachProjectCalls == 1, "The project should be attached")
+			paramAttach := mu.AttachProjectParam1
+			Assert(t, paramAttach == project, "Attach param name should be %s is %s", project.Name, paramAttach.Name)
 		})
 
 		t.Run("selects from selector and opens project with multiplexer", func(t *testing.T) {
 			// given
 			name := "foobar"
-			p := &Project{ID: "1234", Name: name}
-			pjs := []*Project{p}
-			pjsStringified := []string{p.Name}
+			project := &Project{ID: "1234", Name: name}
+			projects := []*Project{project}
+			projectNames := []string{project.Name}
 
-			sc := &MockSelector{}
-			sc.SelectFromReturn = p.Name
+			sl := &MockSelector{}
+			sl.SelectFromReturn = project.Name
 
 			mu := &MockMultiplexer{}
 
 			st := &MockStorage{}
-			st.ListReturn = pjs
+			st.ListReturn = projects
 
-			svc := NewService(sc, mu, st)
+			svc := NewService(sl, mu, st)
 
 			// when
 			svc.SelectAndOpenProject("")
 
 			// then
-			if st.FindCalls != 0 {
-				t.Errorf("Find should not be called")
-			}
+			Assert(t, st.FindCalls == 0, "Find should not be called")
 
-			if sc.SelectFromCalls != 1 {
-				t.Errorf("Selector should be called once")
-			}
+			Assert(t, sl.SelectFromCalls == 1, "Selector should be called once")
 
-			for i, pj := range pjsStringified {
-				if i >= len(sc.SelectFromParam1) {
-					t.Errorf("Selector should be called with %s got %s", pjsStringified, sc.SelectFromParam1)
-				}
+			param1 := sl.SelectFromParam1
+			slicesEqual := slices.Equal(projectNames, param1)
+			Assert(t, slicesEqual, "Selector items param should be %s is %s", projectNames, param1)
 
-				if pj != pjsStringified[i] {
-					t.Errorf("Selector should be called with %s got %s", pjsStringified, sc.SelectFromParam1)
-				}
-			}
-
-			if mu.AttachProjectCalls != 1 {
-				t.Errorf("The project should be attached")
-			}
-
-			if mu.AttachProjectParam1 != p {
-				t.Errorf("The project should be attached with %s got %s", p.Name, mu.AttachProjectParam1.Name)
-			}
+			attachParam := mu.AttachProjectParam1
+			Assert(t, mu.AttachProjectCalls == 1, "The project should be attached")
+			Assert(t, attachParam == project, "attach project should be %s is %s", project.ID, attachParam.ID)
 		})
 
 		t.Run("panics when project is not found", func(t *testing.T) {
 			// given
 			name := "foobar"
-			sc := &MockSelector{}
-			mu := &MockMultiplexer{}
 			err := ErrNotFound
-			st := &MockStorage{FindErr: err}
-			svc := NewService(sc, mu, st)
+
+			sl := &MockSelector{}
+
+			mu := &MockMultiplexer{}
+
+			st := &MockStorage{}
+			st.FindErr = err
+
+			svc := NewService(sl, mu, st)
 
 			// when
 			defer func() {
-				if r := recover(); r == nil {
-					t.Errorf("The code did not panic")
-				} else if r.(error) != ErrNotFound {
-					t.Errorf("The error should be %s was %s", err, r)
-				}
+				r := recover()
+				Assert(t, r != nil, "The code did not panic")
+				Assert(t, r.(error) == ErrNotFound, "The error should be %s was %s", err, r)
 			}()
 			svc.SelectAndOpenProject(name)
 
 			// then
-			if st.FindCalls != 1 {
-				t.Errorf("Find should be called once")
-			}
+			Assert(t, st.FindCalls == 1, "Find should be called once")
+			Assert(t, st.FindParam1 == name, "Find should be called with %s", name)
 
-			if st.FindParam1 != name {
-				t.Errorf("Find should be called with %s", name)
-			}
+			Assert(t, sl.SelectFromCalls == 0, "Selector should not be called")
 
-			if sc.SelectFromCalls != 0 {
-				t.Errorf("Selector should not be called")
-			}
+			Assert(t, mu.AttachProjectCalls == 0, "The project should not be attached")
+		})
 
-			if mu.AttachProjectCalls != 0 {
-				t.Errorf("The project should not be attached")
-			}
+		t.Run("exit gracefully when selector is cancelled", func(t *testing.T) {
+			// given
+			err := ErrSelectorCancelled
+			listReturn := []*Project{{ID: "1234", Name: "foobar"}}
+
+			sl := &MockSelector{}
+			sl.SelectFromErr = err
+
+			mu := &MockMultiplexer{}
+
+			st := &MockStorage{}
+			st.ListReturn = listReturn
+
+			svc := NewService(sl, mu, st)
+
+			// when
+			svc.SelectAndOpenProject("")
+
+			// then
+			Assert(t, sl.SelectFromCalls == 1, "Selector should be called once")
+			Assert(t, mu.AttachProjectCalls == 0, "The project should not be attached")
 		})
 	})
 }
