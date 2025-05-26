@@ -80,5 +80,5 @@ func (c *Cli) helpCmd() {
 }
 
 var (
-	ErrCreateWD = errors.New("Failed to fetch current working directory")
+	ErrCreateWD = errors.New("failed to fetch current working directory")
 )

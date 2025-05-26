@@ -25,7 +25,7 @@ func (s *FzfSelector) SelectFrom(items []string, prompt string) (string, error) 
 	cmd.Stdin = &input
 	cmd.Args = append(cmd.Args, "--prompt", prompt)
 
-	output, err, exitCode := s.e.Execute(cmd)
+	output, exitCode, err := s.e.Execute(cmd)
 	if exitCode == 130 {
 		return "", ErrSelectorCancelled
 	} else if err != nil {

@@ -34,7 +34,7 @@ type Multiplexer interface {
 }
 
 type CommandExecutor interface {
-	Execute(cmd *exec.Cmd) (string, error, int)
+	Execute(cmd *exec.Cmd) (string, int, error)
 }
 
 type Storage interface {
@@ -109,6 +109,9 @@ func (s *ServiceImpl) findOrSelect(name string, prompt string) (*Project, error)
 	}
 
 	projects, err := s.st.List()
+	if err != nil {
+		return nil, err
+	}
 
 	selected, err := s.selectProject(projects, prompt)
 	if err == ErrSelectorCancelled {
