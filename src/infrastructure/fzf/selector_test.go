@@ -4,8 +4,8 @@ import (
 	"errors"
 	"os/exec"
 	. "phopper/src/domain/model"
+	. "phopper/src/domain/utils"
 	. "phopper/src/infrastructure/fzf"
-	. "phopper/test/utils"
 	"slices"
 	"testing"
 )
