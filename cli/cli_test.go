@@ -1,8 +1,8 @@
 package cli_test
 
 import (
-	"phopper/src/app/cli"
-	. "phopper/test/utils"
+	. "phopper/cli"
+	. "phopper/dom/utils"
 	"testing"
 )
 
@@ -55,7 +55,7 @@ func Test_CLI(t *testing.T) {
 			for _, args := range variants {
 				// given
 				svc := &MockService{}
-				cli := cli.NewCli(svc)
+				cli := NewCli(svc)
 
 				// when
 				cli.Run(args)
@@ -76,7 +76,7 @@ func Test_CLI(t *testing.T) {
 			for _, args := range variants {
 				// given
 				svc := &MockService{}
-				cli := cli.NewCli(svc)
+				cli := NewCli(svc)
 
 				// when
 				cli.Run(args)
@@ -103,7 +103,7 @@ func Test_CLI(t *testing.T) {
 			for _, args := range variants {
 				// given
 				svc := &MockService{}
-				cli := cli.NewCli(svc)
+				cli := NewCli(svc)
 
 				// when
 				cli.Run(args)
@@ -122,7 +122,7 @@ func Test_CLI(t *testing.T) {
 			for _, args := range variants {
 				// given
 				svc := &MockService{}
-				cli := cli.NewCli(svc)
+				cli := NewCli(svc)
 
 				// when
 				cli.Run(append(args, name))
@@ -141,7 +141,7 @@ func Test_CLI(t *testing.T) {
 			for _, args := range variants {
 				// given
 				svc := &MockService{}
-				cli := cli.NewCli(svc)
+				cli := NewCli(svc)
 
 				// when
 				cli.Run(append(args, name, cwd))
@@ -167,7 +167,7 @@ func Test_CLI(t *testing.T) {
 			for _, args := range variants {
 				// given
 				svc := &MockService{}
-				cli := cli.NewCli(svc)
+				cli := NewCli(svc)
 
 				// when
 				cli.Run(args)
@@ -185,7 +185,7 @@ func Test_CLI(t *testing.T) {
 			for _, args := range variants {
 				// given
 				svc := &MockService{}
-				cli := cli.NewCli(svc)
+				cli := NewCli(svc)
 
 				// when
 				cli.Run(append(args, name))
@@ -208,7 +208,7 @@ func Test_CLI(t *testing.T) {
 			for _, args := range variants {
 				// given
 				svc := &MockService{}
-				cli := cli.NewCli(svc)
+				cli := NewCli(svc)
 
 				// when
 				cli.Run(args)
@@ -225,7 +225,7 @@ func Test_CLI(t *testing.T) {
 			for _, args := range variants {
 				// given
 				svc := &MockService{}
-				cli := cli.NewCli(svc)
+				cli := NewCli(svc)
 
 				// when
 				cli.Run(append(args, name))

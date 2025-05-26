@@ -1,8 +1,8 @@
-package config
+package cfg
 
 import (
 	"os"
-	. "phopper/src/domain/utils"
+	. "phopper/dom/utils"
 )
 
 type Config interface {

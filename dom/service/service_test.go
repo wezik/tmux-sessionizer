@@ -2,9 +2,9 @@ package service_test
 
 import (
 	"fmt"
-	. "phopper/src/domain/model"
-	. "phopper/src/domain/service"
-	. "phopper/src/domain/utils"
+	. "phopper/dom/model"
+	. "phopper/dom/service"
+	. "phopper/dom/utils"
 	"slices"
 	"testing"
 )
