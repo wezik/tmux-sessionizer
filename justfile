@@ -3,6 +3,10 @@ BINARY_NAME := "phop"
 
 ## Development
 
+run *args:
+  @just build
+  ./.tmp/bin/{{BINARY_NAME}} {{args}}
+
 # builds the app
 build:
   go build -o=./.tmp/bin/{{BINARY_NAME}} {{MAIN_PACKAGE_PATH}}
