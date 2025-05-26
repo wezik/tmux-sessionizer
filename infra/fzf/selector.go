@@ -3,8 +3,8 @@ package fzf
 import (
 	"bytes"
 	"os/exec"
-	. "phopper/src/domain/model"
-	. "phopper/src/domain/service"
+	. "phopper/dom/model"
+	. "phopper/dom/service"
 )
 
 type FzfSelector struct {

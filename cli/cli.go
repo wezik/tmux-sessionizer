@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"phopper/src/domain/service"
+	"phopper/dom/service"
 	"strings"
 )
 

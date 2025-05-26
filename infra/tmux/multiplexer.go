@@ -1,7 +1,7 @@
 package tmux
 
-import . "phopper/src/domain/model"
-import . "phopper/src/domain/service"
+import . "phopper/dom/model"
+import . "phopper/dom/service"
 
 type TmuxMultiplexer struct {
 	e CommandExecutor

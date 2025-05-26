@@ -3,9 +3,9 @@ package fzf_test
 import (
 	"errors"
 	"os/exec"
-	. "phopper/src/domain/model"
-	. "phopper/src/domain/utils"
-	. "phopper/src/infrastructure/fzf"
+	. "phopper/dom/model"
+	. "phopper/dom/utils"
+	. "phopper/infra/fzf"
 	"slices"
 	"testing"
 )

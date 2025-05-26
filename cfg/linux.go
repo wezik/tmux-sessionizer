@@ -1,6 +1,6 @@
 //go:build linux
 
-package config
+package cfg
 
 var (
 	defaultEditor = "xdg-open"

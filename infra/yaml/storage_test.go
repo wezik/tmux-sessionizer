@@ -3,9 +3,9 @@ package yaml_test
 import (
 	"io/fs"
 	"os"
-	. "phopper/src/domain/model"
-	. "phopper/src/domain/utils"
-	. "phopper/src/infrastructure/yaml"
+	. "phopper/dom/model"
+	. "phopper/dom/utils"
+	. "phopper/infra/yaml"
 	"slices"
 	"strings"
 	"testing"

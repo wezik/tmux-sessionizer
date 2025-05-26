@@ -3,14 +3,14 @@ package main
 import (
 	"os"
 	"path/filepath"
-	"phopper/src/app/cli"
-	"phopper/src/app/config"
-	"phopper/src/domain/service"
-	"phopper/src/infrastructure/fs"
-	"phopper/src/infrastructure/fzf"
-	"phopper/src/infrastructure/shell"
-	"phopper/src/infrastructure/tmux"
-	"phopper/src/infrastructure/yaml"
+	"phopper/cfg"
+	"phopper/cli"
+	"phopper/dom/service"
+	"phopper/infra/fs"
+	"phopper/infra/fzf"
+	"phopper/infra/shell"
+	"phopper/infra/tmux"
+	"phopper/infra/yaml"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 		panic(err)
 	}
 
-	cfg := config.NewConfig(filepath.Join(userConfigDir, "phopper"))
+	cfg := cfg.NewConfig(filepath.Join(userConfigDir, "phopper"))
 	fs := fs.NewOsFileSystem()
 
 	e := shell.NewCommandExecutor()

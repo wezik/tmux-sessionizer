@@ -3,17 +3,13 @@ package yaml
 import (
 	"fmt"
 	"path/filepath"
-	. "phopper/src/app/config"
-	. "phopper/src/domain/model"
-	. "phopper/src/domain/service"
+	. "phopper/cfg"
+	. "phopper/dom/model"
+	. "phopper/dom/service"
 
 	"github.com/goccy/go-yaml"
 	"github.com/google/uuid"
 )
-
-// TODO: unit tests to freeze the implementation
-// probably will have to add an interface arround the file system operations
-// or struct with function as a field??? Think about that approach
 
 type YamlStorage struct {
 	config Config
