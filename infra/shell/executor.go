@@ -9,7 +9,7 @@ func NewCommandExecutor() *CommandExecutorImpl {
 	return &CommandExecutorImpl{}
 }
 
-func (c *CommandExecutorImpl) Execute(cmd *exec.Cmd) (string, error, int) {
+func (c *CommandExecutorImpl) Execute(cmd *exec.Cmd) (string, int, error) {
 	res, err := cmd.Output()
-	return string(res), err, cmd.ProcessState.ExitCode()
+	return string(res), cmd.ProcessState.ExitCode(), err
 }

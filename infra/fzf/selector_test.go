@@ -18,10 +18,10 @@ type MockCommandExecutor struct {
 	ExecuteExitCode int
 }
 
-func (m *MockCommandExecutor) Execute(cmd *exec.Cmd) (string, error, int) {
+func (m *MockCommandExecutor) Execute(cmd *exec.Cmd) (string, int, error) {
 	m.ExecuteParam1 = cmd
 	m.ExecuteCalls++
-	return m.ExecuteReturn, m.ExecuteErr, m.ExecuteExitCode
+	return m.ExecuteReturn, m.ExecuteExitCode, m.ExecuteErr
 }
 
 func Test_FzfSelector(t *testing.T) {

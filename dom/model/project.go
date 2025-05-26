@@ -94,5 +94,5 @@ var (
 	ErrInvalidName       = errors.New("name cannot be empty")
 	ErrNotFound          = errors.New("not found")
 	ErrNeedsWindow       = errors.New("at least one window is required")
-	ErrSelectorCancelled = errors.New("Selector cancelled")
+	ErrSelectorCancelled = errors.New("selector cancelled")
 )
