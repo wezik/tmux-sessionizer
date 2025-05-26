@@ -1,6 +1,7 @@
 package yaml_test
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	. "phopper/dom/model"
@@ -191,6 +192,65 @@ func Test_YamlStorage(t *testing.T) {
 				return true
 			}()
 			Assert(t, equal, "Projects should be %s is %s", expectedProjects, projects)
+		})
+
+		t.Run("gracefully handles non directory files", func(t *testing.T) {
+			// given
+			cfg := &MockConfig{}
+
+			fs := &MockFileSystem{}
+			fs.ReadDirReturn = []MockDirEntry{
+				{name: "foo", isDir: false},
+			}
+
+			st := NewYamlStorage(cfg, fs)
+
+			// when
+			projects, err := st.List()
+
+			// then
+			Assert(t, err == nil, "Error should be nil")
+			Assert(t, len(projects) == 0, "Projects should be empty")
+		})
+
+		t.Run("gracefully handles error while reading template file", func(t *testing.T) {
+			// given
+			cfg := &MockConfig{}
+
+			fs := &MockFileSystem{}
+			fs.ReadDirReturn = []MockDirEntry{
+				{name: "foo", isDir: true},
+			}
+			fs.ReadFileErr = errors.New("some error")
+
+			st := NewYamlStorage(cfg, fs)
+
+			// when
+			projects, err := st.List()
+
+			// then
+			Assert(t, err == nil, "Error should be nil")
+			Assert(t, len(projects) == 0, "Projects should be empty")
+		})
+
+		t.Run("gracefully handles error when parsing template file", func(t *testing.T) {
+			// given
+			cfg := &MockConfig{}
+
+			fs := &MockFileSystem{}
+			fs.ReadDirReturn = []MockDirEntry{
+				{name: "foo", isDir: true},
+			}
+			fs.ReadFileReturn = []byte("  name: invalid:format: \ntemplate:\n  root: /home/test\n")
+
+			st := NewYamlStorage(cfg, fs)
+
+			// when
+			projects, err := st.List()
+
+			// then
+			Assert(t, err == nil, "Error should be nil")
+			Assert(t, len(projects) == 0, "Projects should be empty")
 		})
 	})
 
