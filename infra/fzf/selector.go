@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	. "phopper/dom/model"
 	. "phopper/dom/service"
+	"slices"
 )
 
 type FzfSelector struct {
@@ -17,6 +18,8 @@ func NewFzfSelector(executor CommandExecutor) *FzfSelector {
 
 func (s *FzfSelector) SelectFrom(items []string, prompt string) (string, error) {
 	var input bytes.Buffer
+
+	slices.Sort(items)
 	for _, item := range items {
 		input.WriteString(item + "\n")
 	}
