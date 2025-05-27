@@ -27,6 +27,7 @@ test *args:
 # runs test suite with coverage
 test-cover:
   go test -coverprofile=./.tmp/coverage.out -v ./...
+  go tool cover -func=./.tmp/coverage.out | grep total
   go tool cover -html=./.tmp/coverage.out
 
 ## Quality control

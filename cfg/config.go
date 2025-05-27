@@ -7,6 +7,7 @@ import (
 
 type Config interface {
 	GetConfigDir() string
+	GetEditor() string
 }
 
 type ConfigImpl struct {
@@ -25,14 +26,16 @@ func NewConfig(configDir string) *ConfigImpl {
 
 	cfg.editor = defaultEditor
 
-	// TODO: read editor from config file
-
 	// in case editor is set it takes priority
 	if editor := os.Getenv("EDITOR"); editor != "" {
 		cfg.editor = editor
 	}
 
+	// TODO: override editor with config file?
+
 	return cfg
 }
 
 func (c *ConfigImpl) GetConfigDir() string { return c.configDir }
+
+func (c *ConfigImpl) GetEditor() string { return c.editor }

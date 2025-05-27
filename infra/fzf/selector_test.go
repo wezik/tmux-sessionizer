@@ -24,6 +24,10 @@ func (m *MockCommandExecutor) Execute(cmd *exec.Cmd) (string, int, error) {
 	return m.ExecuteReturn, m.ExecuteExitCode, m.ExecuteErr
 }
 
+func (m *MockCommandExecutor) ExecuteInteractive(cmd *exec.Cmd) (int, error) {
+	return 0, nil // not used in this test suite
+}
+
 func Test_FzfSelector(t *testing.T) {
 	t.Run("select from items", func(t *testing.T) {
 		// given

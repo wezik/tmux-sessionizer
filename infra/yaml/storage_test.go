@@ -104,6 +104,10 @@ func (c *MockConfig) GetConfigDir() string {
 	return c.GetConfigDirReturn
 }
 
+func (c *MockConfig) GetEditor() string {
+	return "" // not used in this test suite
+}
+
 func Test_YamlStorage(t *testing.T) {
 	t.Run("list", func(t *testing.T) {
 		t.Run("creates template directory", func(t *testing.T) {
@@ -399,4 +403,22 @@ func Test_YamlStorage(t *testing.T) {
 		})
 	})
 
+	t.Run("prepare template file", func(t *testing.T) {
+		// given
+		cfg := &MockConfig{}
+		cfg.GetConfigDirReturn = "/foo/bar"
+
+		fs := &MockFileSystem{}
+
+		st := NewYamlStorage(cfg, fs)
+
+		expectedPath := "/foo/bar/templates/foo/template.yaml"
+
+		// when
+		path, err := st.PrepareTemplateFile(&Project{ID: "foo", Name: "foobar", Template: Template{Root: "/home/test"}})
+
+		// then
+		Assert(t, err == nil, "Error should be nil is %s", err)
+		Assert(t, path == expectedPath, "result should be %s is %s", expectedPath, path)
+	})
 }
