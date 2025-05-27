@@ -50,6 +50,11 @@ type MockStorage struct {
 
 	DeleteParam1 string
 	DeleteCalls  int
+
+	PrepareTemplateFileParam1 *Project
+	PrepareTemplateFileCalls  int
+	PrepareTemplateFileReturn string
+	PrepareTemplateFileErr    error
 }
 
 func (s *MockStorage) List() ([]*Project, error) {
@@ -75,12 +80,18 @@ func (s *MockStorage) Delete(uuid string) error {
 	return nil
 }
 
+func (s *MockStorage) PrepareTemplateFile(t *Project) (string, error) {
+	s.PrepareTemplateFileParam1 = t
+	s.PrepareTemplateFileCalls++
+	return s.PrepareTemplateFileReturn, s.PrepareTemplateFileErr
+}
+
 func Test_Service(t *testing.T) {
 	t.Run("create project", func(t *testing.T) {
 		t.Run("creates project", func(t *testing.T) {
 			// given
 			st := &MockStorage{}
-			svc := NewService(nil, nil, st)
+			svc := NewService(nil, nil, st, nil)
 			cwd := "/home/test"
 			name := "foobar"
 
@@ -107,7 +118,7 @@ func Test_Service(t *testing.T) {
 			} {
 				t.Run(fmt.Sprintf("for %s and %s", args[0], args[1]), func(t *testing.T) {
 					// given
-					svc := NewService(nil, nil, nil)
+					svc := NewService(nil, nil, nil, nil)
 					cwd := args[0]
 					name := args[1]
 
@@ -133,7 +144,7 @@ func Test_Service(t *testing.T) {
 
 			st := &MockStorage{}
 			st.FindReturn = project
-			svc := NewService(sl, mu, st)
+			svc := NewService(sl, mu, st, nil)
 
 			// when
 			svc.SelectAndOpenProject(name)
@@ -166,7 +177,7 @@ func Test_Service(t *testing.T) {
 			st := &MockStorage{}
 			st.ListReturn = projects
 
-			svc := NewService(sl, mu, st)
+			svc := NewService(sl, mu, st, nil)
 
 			// when
 			svc.SelectAndOpenProject("")
@@ -197,7 +208,7 @@ func Test_Service(t *testing.T) {
 			st := &MockStorage{}
 			st.FindErr = err
 
-			svc := NewService(sl, mu, st)
+			svc := NewService(sl, mu, st, nil)
 
 			// when
 			defer func() {
@@ -230,7 +241,7 @@ func Test_Service(t *testing.T) {
 			st := &MockStorage{}
 			st.ListReturn = listReturn
 
-			svc := NewService(sl, mu, st)
+			svc := NewService(sl, mu, st, nil)
 
 			// when
 			svc.SelectAndOpenProject("")
@@ -255,7 +266,7 @@ func Test_Service(t *testing.T) {
 			st := &MockStorage{}
 			st.FindReturn = project
 
-			svc := NewService(sl, mu, st)
+			svc := NewService(sl, mu, st, nil)
 
 			// when
 			svc.DeleteProject(name)
@@ -289,7 +300,7 @@ func Test_Service(t *testing.T) {
 			st := &MockStorage{}
 			st.ListReturn = projects
 
-			svc := NewService(sl, mu, st)
+			svc := NewService(sl, mu, st, nil)
 
 			// when
 			svc.DeleteProject("")
@@ -319,7 +330,7 @@ func Test_Service(t *testing.T) {
 			st := &MockStorage{}
 			st.FindErr = err
 
-			svc := NewService(sl, mu, st)
+			svc := NewService(sl, mu, st, nil)
 
 			// when
 			defer func() {
@@ -351,7 +362,7 @@ func Test_Service(t *testing.T) {
 			st := &MockStorage{}
 			st.ListReturn = listReturn
 
-			svc := NewService(sl, mu, st)
+			svc := NewService(sl, mu, st, nil)
 
 			// when
 			svc.DeleteProject("")

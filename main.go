@@ -6,6 +6,7 @@ import (
 	"phopper/cfg"
 	"phopper/cli"
 	"phopper/dom/service"
+	"phopper/infra/editor"
 	"phopper/infra/fs"
 	"phopper/infra/fzf"
 	"phopper/infra/shell"
@@ -29,6 +30,8 @@ func main() {
 
 	st := yaml.NewYamlStorage(cfg, fs)
 
-	svc := service.NewService(sl, mu, st)
+	el := editor.NewShellEditorLauncher(cfg.GetEditor(), e)
+
+	svc := service.NewService(sl, mu, st, el)
 	cli.NewCli(svc).Run(os.Args[1:])
 }

@@ -19,10 +19,11 @@ type ServiceImpl struct {
 	sl Selector
 	mu Multiplexer
 	st Storage
+	el EditorLauncher
 }
 
-func NewService(sl Selector, mu Multiplexer, st Storage) *ServiceImpl {
-	return &ServiceImpl{sl: sl, mu: mu, st: st}
+func NewService(sl Selector, mu Multiplexer, st Storage, el EditorLauncher) *ServiceImpl {
+	return &ServiceImpl{sl: sl, mu: mu, st: st, el: el}
 }
 
 type Selector interface {
@@ -35,6 +36,7 @@ type Multiplexer interface {
 
 type CommandExecutor interface {
 	Execute(cmd *exec.Cmd) (string, int, error)
+	ExecuteInteractive(cmd *exec.Cmd) (int, error)
 }
 
 type Storage interface {
@@ -42,6 +44,7 @@ type Storage interface {
 	Find(name string) (*Project, error)
 	Save(t *Project) error
 	Delete(uuid string) error
+	PrepareTemplateFile(t *Project) (string, error)
 }
 
 type FileSystem interface {
@@ -50,6 +53,10 @@ type FileSystem interface {
 	ReadFile(path string) ([]byte, error)
 	WriteFile(path string, data []byte) error
 	RemoveAll(path string) error
+}
+
+type EditorLauncher interface {
+	Open(path string) error
 }
 
 func (s *ServiceImpl) CreateProject(cwd, name string) {
@@ -100,7 +107,19 @@ func (s *ServiceImpl) DeleteProject(name string) {
 }
 
 func (s *ServiceImpl) EditProject(name string) {
-	panic("unimplemented")
+	project, err := s.findOrSelect(name, "Select project to edit > ")
+	if err == ErrSelectorCancelled {
+		fmt.Println("Edit operation cancelled")
+		return
+	} else if err != nil {
+		panic(err)
+	}
+
+	templatePath, err := s.st.PrepareTemplateFile(project)
+	EnsureWithErr(err == nil, err)
+
+	err = s.el.Open(templatePath)
+	EnsureWithErr(err == nil, err)
 }
 
 func (s *ServiceImpl) findOrSelect(name string, prompt string) (*Project, error) {

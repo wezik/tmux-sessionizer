@@ -109,3 +109,8 @@ func (s *YamlStorage) Delete(uuid string) error {
 	templateDir := filepath.Join(cfgDir, templatesDirName, uuid)
 	return s.fs.RemoveAll(templateDir)
 }
+
+func (s *YamlStorage) PrepareTemplateFile(p *Project) (string, error) {
+	cfgDir := s.config.GetConfigDir()
+	return filepath.Join(cfgDir, templatesDirName, p.ID, templateFileName), nil
+}
