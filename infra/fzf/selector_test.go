@@ -1,6 +1,7 @@
 package fzf_test
 
 import (
+	"bytes"
 	"errors"
 	"os/exec"
 	. "phopper/dom/model"
@@ -47,6 +48,9 @@ func Test_FzfSelector(t *testing.T) {
 
 		cmdParam := executor.ExecuteParam1
 		Assert(t, slices.Equal(expectedCommand.Args, cmdParam.Args), "Execute param should be %s is %s", expectedCommand, cmdParam)
+
+		stdin := cmdParam.Stdin.(*bytes.Buffer) // should be sorted
+		Assert(t, stdin.String() == "bar\nbaz\nfoo\n", "Stdin should be %s is %s", "bar\nbaz\nfoo\n", stdin.String())
 		Assert(t, selected == "bar", "Selected item should be %s is %s", "bar", selected)
 	})
 
