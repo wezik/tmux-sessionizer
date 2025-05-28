@@ -1,0 +1,70 @@
+TMP := ./.tmp
+BINARY_NAME := phop
+BINARY_PATH := $(TMP)/bin/$(BINARY_NAME)
+
+# Development
+
+.PHONY: build
+build:
+	go build -o=$(BINARY_PATH)
+
+# make run [command] <args> to run the app
+# this execution is a bit hacky, but it makes it nice to use
+.PHONY: run
+run: @build
+	$(BINARY_PATH) $(filter-out run,$(MAKECMDGOALS))
+
+# regular run, with args, for testing more complex commands
+.PHONY: run/args
+run/args: @build
+	$(BINARY_PATH) $(ARGS)
+
+.PHONY: test
+test:
+	go test -coverprofile=$(TMP)/coverage.out ./...
+
+.PHONY: test/v
+test/v:
+	go test -coverprofile=$(TMP)/coverage.out -v ./...
+
+.PHONY: cover
+cover: @test
+	go tool cover -func=$(TMP)/coverage.out
+
+.PHONY: cover/html
+cover/html: @test
+	go tool cover -html=$(TMP)/coverage.out
+
+# Installation
+
+.PHONY: install
+install: build
+	sudo cp $(BINARY_PATH) /usr/local/bin/
+	@echo "Successfully installed $(BINARY_NAME) on your system"
+
+# Quality control
+
+.PHONY: no-dirty
+no-dirty:
+	git diff --exit-code
+
+.PHONY: audit
+audit:
+	go mod verify
+	go vet ./...
+	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-ST1001,-ST1020,-ST1021 ./...
+	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+	go test -vet=off ./...
+
+
+.PHONY: tidy
+tidy:
+	go fmt ./...
+	go mod tidy -v
+
+.PHONY: pre-push
+pre-push: tidy no-dirty audit
+
+# capture all errors, for nicer output
+%:
+	@:
