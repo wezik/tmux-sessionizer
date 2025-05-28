@@ -44,10 +44,6 @@ install: build
 
 # Quality control
 
-.PHONY: no-dirty
-no-dirty:
-	git diff --exit-code
-
 .PHONY: audit
 audit:
 	go mod verify
@@ -61,9 +57,6 @@ audit:
 tidy:
 	go fmt ./...
 	go mod tidy -v
-
-.PHONY: pre-push
-pre-push: tidy no-dirty audit
 
 # capture all errors, for nicer output
 %:

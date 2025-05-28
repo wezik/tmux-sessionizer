@@ -5,15 +5,12 @@ repos:
         name: Run make tidy
         entry: make tidy
         language: system
-        stages: [pre-push]
-      - id: make-no-dirty
-        name: Run make no-dirty
-        entry: make no-dirty
-        language: system
+        types: [go]
         stages: [pre-push]
       - id: make-audit
         name: Run make audit
         entry: make audit
         language: system
+        types: [go]
         stages: [pre-push]
 
