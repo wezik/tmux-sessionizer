@@ -52,6 +52,9 @@ audit:
 	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 	go test -vet=off ./...
 
+.PHONY: no-dirty
+no-dirty:
+	git diff --exit-code
 
 .PHONY: tidy
 tidy:
