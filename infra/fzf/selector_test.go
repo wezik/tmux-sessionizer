@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"os/exec"
-	. "phopper/dom/model"
-	. "phopper/dom/utils"
-	. "phopper/infra/fzf"
 	"slices"
 	"testing"
+	. "thop/dom/model"
+	. "thop/dom/utils"
+	. "thop/infra/fzf"
 )
 
 type MockCommandExecutor struct {

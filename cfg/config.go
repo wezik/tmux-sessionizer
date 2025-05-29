@@ -2,7 +2,7 @@ package cfg
 
 import (
 	"os"
-	. "phopper/dom/utils"
+	. "thop/dom/utils"
 )
 
 type Config interface {

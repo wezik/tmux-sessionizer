@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	. "phopper/dom/model"
-	. "phopper/dom/utils"
+	. "thop/dom/model"
+	. "thop/dom/utils"
 )
 
 type Service interface {

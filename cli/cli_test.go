@@ -1,9 +1,9 @@
 package cli_test
 
 import (
-	. "phopper/cli"
-	. "phopper/dom/utils"
 	"testing"
+	. "thop/cli"
+	. "thop/dom/utils"
 )
 
 type MockService struct {

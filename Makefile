@@ -1,5 +1,5 @@
 TMP := ./.tmp
-BINARY_NAME := phop
+BINARY_NAME := thop
 BINARY_PATH := $(TMP)/bin/$(BINARY_NAME)
 
 # Development
@@ -11,28 +11,28 @@ build:
 # make run [command] <args> to run the app
 # this execution is a bit hacky, but it makes it nice to use
 .PHONY: run
-run: @build
+run: build
 	$(BINARY_PATH) $(filter-out run,$(MAKECMDGOALS))
 
 # regular run, with args, for testing more complex commands
 .PHONY: run/args
-run/args: @build
+run/args: build
 	$(BINARY_PATH) $(ARGS)
 
 .PHONY: test
-test:
+test: build
 	go test -coverprofile=$(TMP)/coverage.out ./...
 
 .PHONY: test/v
-test/v:
+test/v: build
 	go test -coverprofile=$(TMP)/coverage.out -v ./...
 
 .PHONY: cover
-cover: @test
+cover: test
 	go tool cover -func=$(TMP)/coverage.out
 
 .PHONY: cover/html
-cover/html: @test
+cover/html: test
 	go tool cover -html=$(TMP)/coverage.out
 
 # Installation

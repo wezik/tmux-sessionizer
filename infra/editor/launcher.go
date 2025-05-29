@@ -3,7 +3,7 @@ package editor
 import (
 	"os"
 	"os/exec"
-	. "phopper/dom/service"
+	. "thop/dom/service"
 )
 
 type ShellEditorLauncher struct {

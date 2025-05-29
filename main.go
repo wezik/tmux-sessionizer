@@ -3,15 +3,15 @@ package main
 import (
 	"os"
 	"path/filepath"
-	"phopper/cfg"
-	"phopper/cli"
-	"phopper/dom/service"
-	"phopper/infra/editor"
-	"phopper/infra/fs"
-	"phopper/infra/fzf"
-	"phopper/infra/shell"
-	"phopper/infra/tmux"
-	"phopper/infra/yaml"
+	"thop/cfg"
+	"thop/cli"
+	"thop/dom/service"
+	"thop/infra/editor"
+	"thop/infra/fs"
+	"thop/infra/fzf"
+	"thop/infra/shell"
+	"thop/infra/tmux"
+	"thop/infra/yaml"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 		panic(err)
 	}
 
-	cfg := cfg.NewConfig(filepath.Join(userConfigDir, "phopper"))
+	cfg := cfg.NewConfig(filepath.Join(userConfigDir, "thop"))
 	fs := fs.NewOsFileSystem()
 
 	e := shell.NewCommandExecutor()

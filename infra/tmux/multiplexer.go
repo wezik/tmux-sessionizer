@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	. "phopper/dom/model"
-	. "phopper/dom/service"
+	. "thop/dom/model"
+	. "thop/dom/service"
 )
 
 type TmuxMultiplexer struct {

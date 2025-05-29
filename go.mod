@@ -1,4 +1,4 @@
-module phopper
+module thop
 
 go 1.24.2
 

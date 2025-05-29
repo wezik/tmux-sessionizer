@@ -2,11 +2,11 @@ package service_test
 
 import (
 	"fmt"
-	. "phopper/dom/model"
-	. "phopper/dom/service"
-	. "phopper/dom/utils"
 	"slices"
 	"testing"
+	. "thop/dom/model"
+	. "thop/dom/service"
+	. "thop/dom/utils"
 )
 
 type MockSelector struct {

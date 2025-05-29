@@ -3,9 +3,9 @@ package yaml
 import (
 	"fmt"
 	"path/filepath"
-	. "phopper/cfg"
-	. "phopper/dom/model"
-	. "phopper/dom/service"
+	. "thop/cfg"
+	. "thop/dom/model"
+	. "thop/dom/service"
 
 	"github.com/goccy/go-yaml"
 	"github.com/google/uuid"

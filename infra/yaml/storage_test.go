@@ -4,12 +4,12 @@ import (
 	"errors"
 	"io/fs"
 	"os"
-	. "phopper/dom/model"
-	. "phopper/dom/utils"
-	. "phopper/infra/yaml"
 	"slices"
 	"strings"
 	"testing"
+	. "thop/dom/model"
+	. "thop/dom/utils"
+	. "thop/infra/yaml"
 
 	"github.com/goccy/go-yaml"
 )
