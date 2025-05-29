@@ -19,5 +19,11 @@
       "groupName": "github-actions"
     }
   ],
-  "prConcurrentLimit": 4
+  "prConcurrentLimit": 4,
+  "packageRules": [
+    {
+      "matchManagers": ["gomod"],
+      "postUpdateOptions": ["gomodTidy"]
+    }
+  ]
 }
