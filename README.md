@@ -29,7 +29,7 @@ sudo mv ./thop /usr/local/bin/
 
 ## Usage
 ```
-phop <command> [args...]
+thop <command> [args...]
 ```
 
 ### Commands:
