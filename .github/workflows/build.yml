@@ -1,4 +1,4 @@
-name: Build
+name: Build and test
 
 on:
   push:
@@ -6,16 +6,38 @@ on:
   pull_request:
     branches: [ "master" ]
 
+permissions:
+  checks: write
+  pull-requests: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
 
-      - name: Set up Go
+      - name: ☁️ Checkout source code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.24.x'
 
-      - name: Build
+      - name: 📦 Build
         run: go build -v .
+
+      - name: 👌 Run tests
+        id: test
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          go test -v ./... 2>&1 | tee test_output.txt
+      
+      - name: 📂 Parse test results
+        run: cat test_output.txt | go run github.com/jstemmer/go-junit-report/v2@latest -set-exit-code > report.xml
+
+      - name: 💬 Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: (success() || failure()) && (steps.test.outcome == 'success' || steps.test.outcome == 'failure') && (github.event_name == 'pull_request')
+        with:
+          files: report.xml
