@@ -6,6 +6,10 @@
   ],
   "packageRules": [
     {
+      "matchManagers": ["gomod"],
+      "postUpdateOptions": ["gomodTidy"]
+    },
+    {
       "matchUpdateTypes": [
         "patch",
         "minor"
@@ -19,11 +23,5 @@
       "groupName": "github-actions"
     }
   ],
-  "prConcurrentLimit": 4,
-  "packageRules": [
-    {
-      "matchManagers": ["gomod"],
-      "postUpdateOptions": ["gomodTidy"]
-    }
-  ]
+  "prConcurrentLimit": 4
 }
