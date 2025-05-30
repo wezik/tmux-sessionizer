@@ -21,8 +21,8 @@ Thop is designed to be lightweight, simple to install, and extremely quick to us
 WIP - no released binary yet, for now install from source (requires GO 1.24.2+):
 
 ```bash
-git clone https://github.com/wezik/tmux-sessionizer.git
-cd tmux-sessionizer
+git clone https://github.com/wezik/thop.git
+cd thop
 go build -o ./thop
 sudo mv ./thop /usr/local/bin/
 ```
