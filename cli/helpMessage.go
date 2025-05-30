@@ -1,9 +1,9 @@
 package cli
 
-const helpMessage = `Phop - Project Hopper CLI
+const helpMessage = `Thop - Tmux Hopper CLI
 
 Usage:
-  phop <command> [args...]
+  thop <command> [args...]
 
 Commands:
   select [name]           Open a project in a new session, or switch to an existing one.
@@ -27,6 +27,8 @@ Commands:
   help                    Show this help message.
                           (aliases: any non-command string)
 
+  config                  Edit thop configuration
+                          - Uses editor defined in config, or $EDITOR env variable if not set
+
 Notes:
-- Interactive selection is powered by fzf for commands without explicit [name].
-- Aliases allow fast access for power users (e.g., 'phop c', 'phop s').`
+- Interactive selection is powered by fzf for commands without explicit [name].`
