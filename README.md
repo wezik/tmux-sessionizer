@@ -1,46 +1,92 @@
-# Tmux/Project sessionizer/hopper (phop)
-_name is clearly work in progress_
+# ⚡ Thop - Tmux Hopper
+Fast and lightweight interactive CLI for defining and jumping between projects / tmux sessions.
 
-## What is this?
-**phop** is a handy CLI tool for managing terminal multiplexer sessions with ease. It lets you define reusable project environments using a simple configuration format and automates the creation and switching of sessions. **phop** sets up your terminal with the right windows, scripts, and tools instantly.
+## About
+Light and quick to use way of managing tmux sessions
+
+### Why not tmuxinator?
+Tmuxinator is a great tool, but I found it to be too troublesome and too complex for my own need.
+Thop is designed to be lightweight, simple to install, and extremely quick to use.
 
 ### Features:
-- Fast navigation to any project from anywhere
-- Define project templates for terminal multiplexer (tmux) environments
-- Attach scripts and hooks to specific windows or whole sessions
-- Friendly and flexible configuration
-
-## Why?
-I frequently switch between multiple projects through the day, often needing to change gcloud configurations, spin up SQL proxies, or run specific workflows. Repeating these setup steps manually was tedious and time consuming.
-
-**phop** solves this by letting me define reusable templates that automatically set up my environment exactly how I need it. It also integrates seamlessly with my collection of small utility scripts for daily tasks and testing.
-
-With a fuzzy searchable (fzf) list of projects, I can jump into any project in seconds, with everything already configured and ready to go.
+- Fast navigation to desired project / session from anywhere (including from inside of a Tmux session)
+- Easy to edit yaml templates
+- Run commands in all/desired windows/panes
 
 ## Dependencies
 - [fzf](https://github.com/junegunn/fzf)
-- [tmux](https://github.com/tmux/tmux)
+- [tmux](https://github.com/tmux/tmux) 1.8+ (except for 2.5)
 
-## System wide installation from source (requires Go installed)
+## Installation
+WIP - no released binary yet, for now install from source (requires GO 1.24.2+):
+
 ```bash
 git clone https://github.com/wezik/tmux-sessionizer.git
 cd tmux-sessionizer
-go build -o ./build/phop
-sudo mv ./build/phop /usr/local/bin/
+go build -o ./thop
+sudo mv ./thop /usr/local/bin/
 ```
 
 ## Usage
 ```
-Usage: phop [command]
+phop <command> [args...]
+```
 
-Available commands:
-  a, add, c, create     Create a new project in the current working directory
-  d, delete, r, remove  Delete a project
-  e, edit               Edit a project with the given editor, defaults to system default
-  s, script             Manage scripts (see phop script help for more info)
-  l, list               List projects
-  h, help               Show this help
+### Commands:
+```
+select [name]           Open a project in a new session, or switch to an existing one.
+                        - If no [name] is given, interactive selection is launched.
+                        (aliases: s, <no args>)
+
+create [name] [cwd]     Create a new project template.
+                        - If only [name] is given, uses current working directory.
+                        - If neither are given, both default to current directory name.
+                        (aliases: c, a, add, append, new)
+
+edit [name]             Edit a project template.
+                        - If no [name] is given, interactive selection is launched.
+                        - Uses editor defined in config, or $EDITOR env variable if not set.
+                        (aliases: e)
+
+delete [name]           Delete a project template.
+                        - If no [name] is given, interactive selection is launched.
+                        (aliases: d)
+
+help                    Show this help message.
+                        (aliases: any non-command string)
+
+config                  Edit thop configuration
+                        - Uses editor defined in config, or $EDITOR env variable if not set
+
+Notes:
+- Interactive selection is powered by fzf for commands without explicit [name].
+```
+
+## Editor
+
+Thop uses your shell's default editor for opening files (`$EDITOR`)
+To change it you have 2 options:
+
+A) Add this to your `.bashrc`  
+
+```bash
+export EDITOR='vim'
+``` 
+
+B) Run below command, add `editor: vim` in a new line and save it
+
+```bash
+thop config
 ```
 
 ## Current state
 This project is in a very early experimental stage, I am figuring out how I want this thing to work and what it should be capable of.
+
+## Ideas / TODO's
+- Tmux integration, unit tests
+- EditProject route, unit tests
+- Integration tests
+- General config file, launchable from command
+- List active tmux sessions, and allow to attach to them
+- Consider replacing cli entrypoint with cobra
+- Add showcase and example template to README
