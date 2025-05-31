@@ -17,7 +17,7 @@ type Project struct {
 	ID       string   `yaml:"-"`
 	Name     string   `yaml:"name"`
 	Version  Version  `yaml:"version"`
-	Template Template `yaml:"template"`
+	Template *Template `yaml:"template"`
 }
 
 type Template struct {
@@ -43,7 +43,7 @@ type Pane struct {
 	Commands []string `yaml:"run,omitempty"`
 }
 
-func NewProject(name string, template Template) (*Project, error) {
+func NewProject(name string, template *Template) (*Project, error) {
 	if name == "" {
 		return nil, ErrInvalidName
 	}
