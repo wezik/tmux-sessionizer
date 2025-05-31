@@ -83,7 +83,6 @@ thop config
 This project is in a very early experimental stage, I am figuring out how I want this thing to work and what it should be capable of.
 
 ## Ideas / TODO's
-- Tmux integration, unit tests
 - EditProject route, unit tests
 - Panes support
 - Integration tests
