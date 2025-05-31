@@ -14,9 +14,9 @@ const (
 )
 
 type Project struct {
-	ID       string   `yaml:"-"`
-	Name     string   `yaml:"name"`
-	Version  Version  `yaml:"version"`
+	ID       string    `yaml:"-"`
+	Name     string    `yaml:"name"`
+	Version  Version   `yaml:"version"`
 	Template *Template `yaml:"template"`
 }
 

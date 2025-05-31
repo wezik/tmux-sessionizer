@@ -5,6 +5,8 @@ import (
 	"os/exec"
 	"testing"
 
+	. "thop/dom/model"
+	. "thop/dom/service"
 	. "thop/infra/tmux"
 )
 
@@ -230,5 +232,220 @@ func Test_TmuxClient(t *testing.T) {
 		assert(t, args[6] == "main", "Expected window name")
 		assert(t, args[7] == "-c", "Expected -c flag")
 		assert(t, args[8] == "/project", "Expected window root")
+	})
+}
+
+func Test_TmuxMultiplexer(t *testing.T) {
+	t.Run("AttachProject returns error if project has no name", func(t *testing.T) {
+		executor := &MockCommandExecutor{}
+		mu := NewTmuxMultiplexer(executor, nil)
+
+		err := mu.AttachProject(&Project{Name: "", Template: &Template{Name: ""}})
+		assert(t, err != nil, "Expected error when project has no name")
+	})
+
+	t.Run("AttachProject returns error if project template is nil", func(t *testing.T) {
+		executor := &MockCommandExecutor{}
+		mu := NewTmuxMultiplexer(executor, nil)
+
+		err := mu.AttachProject(&Project{Name: "foo", Template: nil})
+		assert(t, err != nil, "Expected error when project has no template")
+	})
+
+	t.Run("AttachProject returns error if project template has no windows", func(t *testing.T) {
+		executor := &MockCommandExecutor{}
+		client := &TmuxClient{}
+		client.HasSession = func(e CommandExecutor, sessionName string) (bool, error) {
+			return false, nil
+		}
+
+		mu := NewTmuxMultiplexer(executor, client)
+
+		err := mu.AttachProject(&Project{Name: "foo", Template: &Template{Windows: []Window{}}})
+		assert(t, err != nil, "Expected error when project template has no windows")
+	})
+
+	t.Run("AttachProject creates new session and attaches if it doesn't exist", func(t *testing.T) {
+		executor := &MockCommandExecutor{}
+		client := &TmuxClient{}
+		client.HasSession = func(e CommandExecutor, sessionName string) (bool, error) {
+			return false, nil
+		}
+		client.NewSession = func(e CommandExecutor, sessionName, sessionRoot, windowName, windowRoot string) error {
+			assert(t, sessionName == "foo", "Expected session name")
+			assert(t, sessionRoot == "/home/test", "Expected session root")
+			assert(t, windowName == "main", "Expected window name")
+			assert(t, windowRoot == "/project", "Expected window root")
+			return nil
+		}
+
+		client.IsInTmuxSession = func() bool {
+			return false
+		}
+
+		client.AttachSession = func(e CommandExecutor, sessionName string) error {
+			assert(t, sessionName == "foo", "Expected session name")
+			return nil
+		}
+
+		mu := NewTmuxMultiplexer(executor, client)
+
+		err := mu.AttachProject(&Project{Name: "foo", Template: &Template{Root: "/home/test", Windows: []Window{{Name: "main", Root: "/project"}}}})
+		assert(t, err == nil, "Expected no error")
+	})
+
+	t.Run("AttachProject attaches to existing session if it exists", func(t *testing.T) {
+		executor := &MockCommandExecutor{}
+		client := &TmuxClient{}
+		client.HasSession = func(e CommandExecutor, sessionName string) (bool, error) {
+			return true, nil
+		}
+
+		client.IsInTmuxSession = func() bool {
+			return false
+		}
+
+		client.AttachSession = func(e CommandExecutor, sessionName string) error {
+			assert(t, sessionName == "foo", "Expected session name")
+			return nil
+		}
+
+		mu := NewTmuxMultiplexer(executor, client)
+
+		err := mu.AttachProject(&Project{Name: "foo", Template: &Template{Root: "/home/test", Windows: []Window{{Name: "main", Root: "/project"}}}})
+		assert(t, err == nil, "Expected no error")
+	})
+
+	t.Run("AttachProject creates new session and switches if it doesn't exist and is in tmux session", func(t *testing.T) {
+		executor := &MockCommandExecutor{}
+		client := &TmuxClient{}
+		client.HasSession = func(e CommandExecutor, sessionName string) (bool, error) {
+			return false, nil
+		}
+		client.NewSession = func(e CommandExecutor, sessionName, sessionRoot, windowName, windowRoot string) error {
+			assert(t, sessionName == "foo", "Expected session name")
+			assert(t, sessionRoot == "/home/test", "Expected session root")
+			assert(t, windowName == "main", "Expected window name")
+			assert(t, windowRoot == "/project", "Expected window root")
+			return nil
+		}
+
+		client.IsInTmuxSession = func() bool {
+			return true
+		}
+
+		client.SwitchSession = func(e CommandExecutor, sessionName string) error {
+			assert(t, sessionName == "foo", "Expected session name")
+			return nil
+		}
+
+		mu := NewTmuxMultiplexer(executor, client)
+
+		err := mu.AttachProject(&Project{Name: "foo", Template: &Template{Root: "/home/test", Windows: []Window{{Name: "main", Root: "/project"}}}})
+		assert(t, err == nil, "Expected no error")
+	})
+
+	t.Run("AttachProject switches to existing session if it exists and is in tmux session", func(t *testing.T) {
+		executor := &MockCommandExecutor{}
+		client := &TmuxClient{}
+		client.HasSession = func(e CommandExecutor, sessionName string) (bool, error) {
+			return true, nil
+		}
+
+		client.IsInTmuxSession = func() bool {
+			return true
+		}
+
+		client.SwitchSession = func(e CommandExecutor, sessionName string) error {
+			assert(t, sessionName == "foo", "Expected session name")
+			return nil
+		}
+
+		mu := NewTmuxMultiplexer(executor, client)
+
+		err := mu.AttachProject(&Project{Name: "foo", Template: &Template{Root: "/home/test", Windows: []Window{{Name: "main", Root: "/project"}}}})
+		assert(t, err == nil, "Expected no error")
+	})
+
+	t.Run("AttachProject properly assembles a complex session", func(t *testing.T) {
+		executor := &MockCommandExecutor{}
+		client := &TmuxClient{}
+		client.HasSession = func(e CommandExecutor, sessionName string) (bool, error) {
+			return false, nil
+		}
+		client.NewSession = func(e CommandExecutor, sessionName, sessionRoot, windowName, windowRoot string) error {
+			assert(t, sessionName == "foo", "Expected session name")
+			assert(t, sessionRoot == "/home/test", "Expected session root")
+			assert(t, windowName == "main", "Expected window name")
+			assert(t, windowRoot == "/project", "Expected window root")
+			return nil
+		}
+
+		client.NewWindow = func(e CommandExecutor, sessionName, sessionRoot, windowName, windowRoot string) error {
+			assert(t, sessionName == "foo", "Expected session name")
+			assert(t, sessionRoot == "/home/test", "Expected session root")
+			assert(t, windowName == "baz", "Expected window name")
+			assert(t, windowRoot == "", "Expected no window root")
+			return nil
+		}
+
+		sendKeysCall := 0
+
+		client.SendKeys = func(e CommandExecutor, sessionName, windowName, keys string) error {
+			sendKeysCall++
+
+			switch sendKeysCall {
+			case 1:
+				{
+					assert(t, sessionName == "foo", "Expected session name")
+					assert(t, windowName == "main", "Expected window name to be main is %s", windowName)
+					assert(t, keys == "echo hello", "Expected keys")
+				}
+			case 2:
+				{
+					assert(t, sessionName == "foo", "Expected session name")
+					assert(t, windowName == "baz", "Expected window name to be baz is %s", windowName)
+					assert(t, keys == "echo hello", "Expected keys")
+				}
+			case 3:
+				{
+					assert(t, sessionName == "foo", "Expected session name")
+					assert(t, windowName == "baz", "Expected window name to be baz is %s", windowName)
+					assert(t, keys == "ls", "Expected keys")
+				}
+			}
+			return nil
+		}
+
+		client.IsInTmuxSession = func() bool {
+			return false
+		}
+
+		client.AttachSession = func(e CommandExecutor, sessionName string) error {
+			assert(t, sessionName == "foo", "Expected session name")
+			return nil
+		}
+
+		mu := NewTmuxMultiplexer(executor, client)
+
+		err := mu.AttachProject(&Project{
+			Name: "foo",
+			Template: &Template{
+				Root:     "/home/test",
+				Commands: []string{"echo hello"},
+				Windows: []Window{
+					{
+						Name: "main",
+						Root: "/project",
+					},
+					{
+						Name:     "baz",
+						Commands: []string{"ls"},
+					},
+				},
+			},
+		})
+
+		assert(t, err == nil, "Expected no error")
 	})
 }

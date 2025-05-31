@@ -248,6 +248,10 @@ func (m *TmuxMultiplexer) AttachProject(p *Project) error {
 }
 
 func resolveSessionName(p *Project) (string, error) {
+	if p.Template == nil {
+		return "", errors.New("project template cannot be nil")
+	}
+
 	if p.Template.Name == "" {
 		if p.Name == "" {
 			return "", errors.New("project name cannot be empty")
