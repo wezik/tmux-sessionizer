@@ -69,7 +69,7 @@ func (s *ServiceImpl) CreateProject(cwd, name string) {
 	template, err := NewTemplate(cwd, []Window{*window})
 	EnsureWithErr(err == nil, err)
 
-	project, err := NewProject(name, *template)
+	project, err := NewProject(name, template)
 	EnsureWithErr(err == nil, err)
 
 	err = s.st.Save(project)

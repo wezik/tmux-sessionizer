@@ -160,9 +160,9 @@ func Test_YamlStorage(t *testing.T) {
 			fs.ReadFileReturn = []byte("name: foobar\ntemplate:\n  root: /home/test\n")
 
 			expectedProjects := []*Project{
-				{ID: "foo", Name: "foobar", Template: Template{Root: "/home/test"}},
-				{ID: "bar", Name: "foobar", Template: Template{Root: "/home/test"}},
-				{ID: "baz", Name: "foobar", Template: Template{Root: "/home/test"}},
+				{ID: "foo", Name: "foobar", Template: &Template{Root: "/home/test"}},
+				{ID: "bar", Name: "foobar", Template: &Template{Root: "/home/test"}},
+				{ID: "baz", Name: "foobar", Template: &Template{Root: "/home/test"}},
 			}
 
 			st := NewYamlStorage(cfg, fs)
@@ -302,7 +302,7 @@ func Test_YamlStorage(t *testing.T) {
 				{name: "foo", isDir: true},
 			}
 			fs.ReadFileReturn = []byte("name: foobar\ntemplate:\n  root: /home/test\n")
-			expectedProject := &Project{ID: "foo", Name: "foobar", Template: Template{Root: "/home/test"}}
+			expectedProject := &Project{ID: "foo", Name: "foobar", Template: &Template{Root: "/home/test"}}
 
 			st := NewYamlStorage(cfg, fs)
 
@@ -362,7 +362,7 @@ func Test_YamlStorage(t *testing.T) {
 
 			fs := &MockFileSystem{}
 
-			project := &Project{ID: "foo", Name: "foobar", Template: Template{Root: "/home/test"}}
+			project := &Project{ID: "foo", Name: "foobar", Template: &Template{Root: "/home/test"}}
 
 			expectedBytes, err := yaml.Marshal(project)
 			Assert(t, err == nil, "Error should be nil")
@@ -415,7 +415,7 @@ func Test_YamlStorage(t *testing.T) {
 		expectedPath := "/foo/bar/templates/foo/template.yaml"
 
 		// when
-		path, err := st.PrepareTemplateFile(&Project{ID: "foo", Name: "foobar", Template: Template{Root: "/home/test"}})
+		path, err := st.PrepareTemplateFile(&Project{ID: "foo", Name: "foobar", Template: &Template{Root: "/home/test"}})
 
 		// then
 		Assert(t, err == nil, "Error should be nil is %s", err)
