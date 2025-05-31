@@ -85,6 +85,7 @@ This project is in a very early experimental stage, I am figuring out how I want
 ## Ideas / TODO's
 - Tmux integration, unit tests
 - EditProject route, unit tests
+- Panes support
 - Integration tests
 - General config file, launchable from command
 - List active tmux sessions, and allow to attach to them
