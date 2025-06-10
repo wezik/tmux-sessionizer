@@ -83,6 +83,8 @@ thop config
 This project is in a very early experimental stage, I am figuring out how I want this thing to work and what it should be capable of.
 
 ## Ideas / TODO's
+- Refactor tmux unit tests to testify
+- Refactor yaml unit tests to testify
 - Panes support
 - Integration tests
 - General config file, launchable from command
