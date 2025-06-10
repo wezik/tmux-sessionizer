@@ -3,93 +3,77 @@ package cli_test
 import (
 	"testing"
 	. "thop/cli"
-	. "thop/dom/utils"
+
+	"github.com/stretchr/testify/mock"
 )
 
 type MockService struct {
-	SelectAndOpenProjectParam1 string
-	SelectAndOpenProjectCalls  int
-
-	CreateProjectParam1 string
-	CreateProjectParam2 string
-	CreateProjectCalls  int
-
-	DeleteProjectParam1 string
-	DeleteProjectCalls  int
-
-	EditProjectParam1 string
-	EditProjectParam2 string
-	EditProjectCalls  int
+	mock.Mock
 }
 
 func (s *MockService) SelectAndOpenProject(name string) {
-	s.SelectAndOpenProjectParam1 = name
-	s.SelectAndOpenProjectCalls++
+	s.Called(name)
 }
 
 func (s *MockService) CreateProject(cwd, name string) {
-	s.CreateProjectParam1 = cwd
-	s.CreateProjectParam2 = name
-	s.CreateProjectCalls++
+	s.Called(cwd, name)
 }
 
 func (s *MockService) DeleteProject(name string) {
-	s.DeleteProjectParam1 = name
-	s.DeleteProjectCalls++
+	s.Called(name)
 }
 
 func (s *MockService) EditProject(name string) {
-	s.EditProjectParam1 = name
-	s.EditProjectCalls++
+	s.Called(name)
 }
 
-func Test_CLI(t *testing.T) {
-	t.Run("select command", func(t *testing.T) {
-		t.Run("select project", func(t *testing.T) {
-			variants := [][]string{
-				{"select"},
-				{"s"},
-				{},
-			}
+func Test_Select_Command(t *testing.T) {
+	t.Run("selects project with empty name", func(t *testing.T) {
+		variants := [][]string{
+			{"select"},
+			{"s"},
+			{},
+		}
 
-			for _, args := range variants {
-				// given
-				svc := &MockService{}
-				cli := NewCli(svc)
+		for _, args := range variants {
+			// given
+			svcMock := new(MockService)
+			svcMock.On("SelectAndOpenProject", "").Once()
 
-				// when
-				cli.Run(args)
+			cli := NewCli(svcMock)
 
-				// then
-				Assert(t, svc.SelectAndOpenProjectCalls == 1, "SelectAndOpenProject should be called once")
-				Assert(t, svc.SelectAndOpenProjectParam1 == "", "Name should be empty")
-			}
-		})
+			// when
+			cli.Run(args)
 
-		t.Run("select project with name", func(t *testing.T) {
-			name := "foobar"
-			variants := [][]string{
-				{"select", name},
-				{"s", name},
-			}
-
-			for _, args := range variants {
-				// given
-				svc := &MockService{}
-				cli := NewCli(svc)
-
-				// when
-				cli.Run(args)
-
-				// then
-				Assert(t, svc.SelectAndOpenProjectCalls == 1, "SelectAndOpenProject should be called once")
-				param := svc.SelectAndOpenProjectParam1
-				Assert(t, param == name, "Name should be %s is %s", name, param)
-			}
-		})
+			// then
+			svcMock.AssertExpectations(t)
+		}
 	})
 
-	t.Run("create command", func(t *testing.T) {
+	t.Run("selects project with name", func(t *testing.T) {
+		variants := [][]string{
+			{"select", "foobar"},
+			{"s", "foobar"},
+		}
+
+		for _, args := range variants {
+			// given
+			svcMock := new(MockService)
+			svcMock.On("SelectAndOpenProject", "foobar").Once()
+
+			cli := NewCli(svcMock)
+
+			// when
+			cli.Run(args)
+
+			// then
+			svcMock.AssertExpectations(t)
+		}
+	})
+}
+
+func Test_Create_Command(t *testing.T) {
+	t.Run("creates project with no args", func(t *testing.T) {
 		variants := [][]string{
 			{"create"},
 			{"c"},
@@ -99,142 +83,156 @@ func Test_CLI(t *testing.T) {
 			{"new"},
 		}
 
-		t.Run("create project", func(t *testing.T) {
-			for _, args := range variants {
-				// given
-				svc := &MockService{}
-				cli := NewCli(svc)
+		for _, args := range variants {
+			// given
+			svcMock := new(MockService)
+			svcMock.On("CreateProject", mock.Anything, mock.Anything).Once()
 
-				// when
-				cli.Run(args)
+			cli := NewCli(svcMock)
 
-				// then
-				Assert(t, svc.CreateProjectCalls == 1, "CreateProject should be called once")
-				param1 := svc.CreateProjectParam1
-				param2 := svc.CreateProjectParam2
-				Assert(t, param1 == param2, "Name should default to current working directory")
-			}
-		})
+			// when
+			cli.Run(args)
 
-		t.Run("create project with name", func(t *testing.T) {
-			name := "foobar"
-
-			for _, args := range variants {
-				// given
-				svc := &MockService{}
-				cli := NewCli(svc)
-
-				// when
-				cli.Run(append(args, name))
-
-				// then
-				Assert(t, svc.CreateProjectCalls == 1, "CreateProject should be called once")
-				param2 := svc.CreateProjectParam2
-				Assert(t, param2 == name, "Name should be %s is %s", name, param2)
-			}
-		})
-
-		t.Run("create project with name and cwd", func(t *testing.T) {
-			name := "foobar"
-			cwd := "/home/test"
-
-			for _, args := range variants {
-				// given
-				svc := &MockService{}
-				cli := NewCli(svc)
-
-				// when
-				cli.Run(append(args, name, cwd))
-
-				// then
-				Assert(t, svc.CreateProjectCalls == 1, "CreateProject should be called once")
-
-				param1 := svc.CreateProjectParam1
-				Assert(t, param1 == cwd, "Cwd should be %s is %s", cwd, param1)
-				param2 := svc.CreateProjectParam2
-				Assert(t, param2 == name, "Name should be %s is %s", name, param2)
-			}
-		})
+			// then
+			svcMock.AssertExpectations(t)
+		}
 	})
 
-	t.Run("delete command", func(t *testing.T) {
+	t.Run("creates project with name", func(t *testing.T) {
+		variants := [][]string{
+			{"create", "foobar"},
+			{"c", "foobar"},
+			{"a", "foobar"},
+			{"add", "foobar"},
+			{"append", "foobar"},
+			{"new", "foobar"},
+		}
+
+		for _, args := range variants {
+			// given
+			svcMock := new(MockService)
+			svcMock.On("CreateProject", mock.Anything, "foobar").Once()
+
+			cli := NewCli(svcMock)
+
+			// when
+			cli.Run(args)
+
+			// then
+			svcMock.AssertExpectations(t)
+		}
+	})
+
+	t.Run("creates project with name and cwd", func(t *testing.T) {
+		variants := [][]string{
+			{"create", "foobar", "/home/test"},
+			{"c", "foobar", "/home/test"},
+			{"a", "foobar", "/home/test"},
+			{"add", "foobar", "/home/test"},
+			{"append", "foobar", "/home/test"},
+			{"new", "foobar", "/home/test"},
+		}
+
+		for _, args := range variants {
+			// given
+			svcMock := new(MockService)
+			svcMock.On("CreateProject", "/home/test", "foobar").Once()
+
+			cli := NewCli(svcMock)
+
+			// when
+			cli.Run(args)
+
+			// then
+			svcMock.AssertExpectations(t)
+		}
+	})
+}
+
+func Test_Delete_Command(t *testing.T) {
+	t.Run("deletes project with no args", func(t *testing.T) {
 		variants := [][]string{
 			{"delete"},
 			{"d"},
 		}
 
-		t.Run("delete project", func(t *testing.T) {
-			for _, args := range variants {
-				// given
-				svc := &MockService{}
-				cli := NewCli(svc)
+		for _, args := range variants {
+			// given
+			svcMock := new(MockService)
+			svcMock.On("DeleteProject", mock.Anything).Once()
 
-				// when
-				cli.Run(args)
+			cli := NewCli(svcMock)
 
-				// then
-				Assert(t, svc.DeleteProjectCalls == 1, "DeleteProject should be called once")
-				param := svc.DeleteProjectParam1
-				Assert(t, param == "", "Name should be empty")
-			}
-		})
+			// when
+			cli.Run(args)
 
-		t.Run("delete project with name", func(t *testing.T) {
-			name := "foobar"
-
-			for _, args := range variants {
-				// given
-				svc := &MockService{}
-				cli := NewCli(svc)
-
-				// when
-				cli.Run(append(args, name))
-
-				// then
-				Assert(t, svc.DeleteProjectCalls == 1, "DeleteProject should be called once")
-				param := svc.DeleteProjectParam1
-				Assert(t, param == name, "Name should be %s is %s", name, param)
-			}
-		})
+			// then
+			svcMock.AssertExpectations(t)
+		}
 	})
 
-	t.Run("edit command", func(t *testing.T) {
+	t.Run("deletes project with name", func(t *testing.T) {
+		variants := [][]string{
+			{"delete", "foobar"},
+			{"d", "foobar"},
+		}
+
+		for _, args := range variants {
+			// given
+			svcMock := new(MockService)
+			svcMock.On("DeleteProject", "foobar").Once()
+
+			cli := NewCli(svcMock)
+
+			// when
+			cli.Run(args)
+
+			// then
+			svcMock.AssertExpectations(t)
+		}
+	})
+}
+
+func Test_Edit_Command(t *testing.T) {
+	t.Run("edits project with no args", func(t *testing.T) {
 		variants := [][]string{
 			{"edit"},
 			{"e"},
 		}
 
-		t.Run("edit project", func(t *testing.T) {
-			for _, args := range variants {
-				// given
-				svc := &MockService{}
-				cli := NewCli(svc)
+		for _, args := range variants {
+			// given
+			svcMock := new(MockService)
+			svcMock.On("EditProject", mock.Anything).Once()
 
-				// when
-				cli.Run(args)
+			cli := NewCli(svcMock)
 
-				// then
-				Assert(t, svc.EditProjectCalls == 1, "EditProject should be called once")
-				Assert(t, svc.EditProjectParam1 == "", "Name should be empty")
-			}
-		})
+			// when
+			cli.Run(args)
 
-		t.Run("delete project with name", func(t *testing.T) {
-			name := "foobar"
+			// then
+			svcMock.AssertExpectations(t)
+		}
+	})
 
-			for _, args := range variants {
-				// given
-				svc := &MockService{}
-				cli := NewCli(svc)
+	t.Run("edits project with name", func(t *testing.T) {
+		variants := [][]string{
+			{"edit", "foobar"},
+			{"e", "foobar"},
+		}
 
-				// when
-				cli.Run(append(args, name))
+		for _, args := range variants {
+			// given
+			svcMock := new(MockService)
+			svcMock.On("EditProject", "foobar").Once()
 
-				// then
-				Assert(t, svc.EditProjectCalls == 1, "EditProject should be called once")
-				param := svc.EditProjectParam1
-				Assert(t, param == name, "Name should be %s is %s", name, param)
-			}
-		})
+			cli := NewCli(svcMock)
+
+			// when
+			cli.Run(args)
+
+			// then
+			svcMock.AssertExpectations(t)
+		}
 	})
 }
