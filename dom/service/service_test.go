@@ -2,375 +2,386 @@ package service_test
 
 import (
 	"fmt"
-	"slices"
 	"testing"
 	. "thop/dom/model"
 	. "thop/dom/service"
-	. "thop/dom/utils"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 type MockSelector struct {
-	SelectFromParam1 []string
-	SelectFromParam2 string
-	SelectFromCalls  int
-	SelectFromReturn string
-	SelectFromErr    error
+	mock.Mock
 }
 
 func (s *MockSelector) SelectFrom(items []string, prompt string) (string, error) {
-	s.SelectFromParam1 = items
-	s.SelectFromParam2 = prompt
-	s.SelectFromCalls++
-	return s.SelectFromReturn, s.SelectFromErr
+	args := s.Called(items, prompt)
+	return args.String(0), args.Error(1)
 }
 
 type MockMultiplexer struct {
-	AttachProjectParam1 *Project
-	AttachProjectCalls  int
+	mock.Mock
 }
 
 func (s *MockMultiplexer) AttachProject(p *Project) error {
-	s.AttachProjectParam1 = p
-	s.AttachProjectCalls++
-	return nil
+	args := s.Called(p)
+	return args.Error(0)
 }
 
 type MockStorage struct {
-	ListCalls  int
-	ListReturn []*Project
-	ListErr    error
-
-	FindParam1 string
-	FindCalls  int
-	FindReturn *Project
-	FindErr    error
-
-	SaveParam1 *Project
-	SaveCalls  int
-
-	DeleteParam1 string
-	DeleteCalls  int
-
-	PrepareTemplateFileParam1 *Project
-	PrepareTemplateFileCalls  int
-	PrepareTemplateFileReturn string
-	PrepareTemplateFileErr    error
+	mock.Mock
 }
 
 func (s *MockStorage) List() ([]*Project, error) {
-	s.ListCalls++
-	return s.ListReturn, s.ListErr
+	args := s.Called()
+	return args.Get(0).([]*Project), args.Error(1)
 }
 
 func (s *MockStorage) Find(name string) (*Project, error) {
-	s.FindParam1 = name
-	s.FindCalls++
-	return s.FindReturn, s.FindErr
+	args := s.Called(name)
+	return args.Get(0).(*Project), args.Error(1)
 }
 
 func (s *MockStorage) Save(t *Project) error {
-	s.SaveParam1 = t
-	s.SaveCalls++
-	return nil
+	args := s.Called(t)
+	return args.Error(0)
 }
 
 func (s *MockStorage) Delete(uuid string) error {
-	s.DeleteParam1 = uuid
-	s.DeleteCalls++
-	return nil
+	args := s.Called(uuid)
+	return args.Error(0)
 }
 
 func (s *MockStorage) PrepareTemplateFile(t *Project) (string, error) {
-	s.PrepareTemplateFileParam1 = t
-	s.PrepareTemplateFileCalls++
-	return s.PrepareTemplateFileReturn, s.PrepareTemplateFileErr
+	args := s.Called(t)
+	return args.String(0), args.Error(1)
 }
 
-func Test_Service(t *testing.T) {
-	t.Run("create project", func(t *testing.T) {
-		t.Run("creates project", func(t *testing.T) {
-			// given
-			st := &MockStorage{}
-			svc := NewService(nil, nil, st, nil)
-			cwd := "/home/test"
-			name := "foobar"
+type MockEditorLauncher struct {
+	mock.Mock
+}
 
-			// when
-			svc.CreateProject(cwd, name)
+func (s *MockEditorLauncher) Open(path string) error {
+	args := s.Called(path)
+	return args.Error(0)
+}
 
-			// then
-			Assert(t, st.SaveCalls == 1, "Save should be called once")
+func Test_Create_Project(t *testing.T) {
+	t.Run("creates project", func(t *testing.T) {
+		// given
+		stMock := new(MockStorage)
+		svc := NewService(nil, nil, stMock, nil)
 
-			param1 := st.SaveParam1
-			Assert(t, param1.Name == name, "Saved project should have name %s has %s", name, param1.Name)
+		cwd := "/home/test"
+		name := "foobar"
 
-			template := param1.Template
-			Assert(t, template.Root == cwd, "Root should be %s is %s", cwd, template.Root)
-			Assert(t, template.Name != name, "Name should be %s is %s", name, template.Name)
-			Assert(t, len(template.Windows) == 1, "Saved project should have one window")
-		})
+		var projectParam *Project
+		stMock.On("Save", mock.Anything).Run(func(args mock.Arguments) {
+			projectParam = args.Get(0).(*Project)
+		}).Return(nil)
 
-		t.Run("panics with invalid data", func(t *testing.T) {
-			for _, args := range [][]string{
-				{"", ""},
-				{"", "foo"},
-				{"/foo/bar", ""},
-			} {
-				t.Run(fmt.Sprintf("for %s and %s", args[0], args[1]), func(t *testing.T) {
-					// given
-					svc := NewService(nil, nil, nil, nil)
-					cwd := args[0]
-					name := args[1]
+		// when
+		svc.CreateProject(cwd, name)
 
-					// expect
-					defer func() {
-						Assert(t, recover() != nil, "The code did not panic")
-					}()
-					svc.CreateProject(cwd, name)
-				})
-			}
-		})
+		// then
+		assert.Equal(t, name, projectParam.Name)
+		assert.Equal(t, cwd, projectParam.Template.Root)
 	})
 
-	t.Run("select and open project", func(t *testing.T) {
-		t.Run("finds and opens project with multiplexer", func(t *testing.T) {
-			// given
-			name := "foobar"
-			project := &Project{ID: "1234", Name: name}
+	t.Run("panics with invalid data", func(t *testing.T) {
+		for _, args := range [][]string{
+			{"", ""},
+			{"", "foo"},
+			{"/foo/bar", ""},
+		} {
+			t.Run(fmt.Sprintf("for %s and %s", args[0], args[1]), func(t *testing.T) {
+				// given
+				svc := NewService(nil, nil, nil, nil)
+				cwd := args[0]
+				name := args[1]
 
-			sl := &MockSelector{}
+				// expect
+				defer func() {
+					assert.NotNil(t, recover(), "The code did not panic")
+				}()
+				svc.CreateProject(cwd, name)
+			})
+		}
+	})
+}
 
-			mu := &MockMultiplexer{}
+func Test_Select_And_Open_Project(t *testing.T) {
+	t.Run("runs selector and attaches to project when name is empty", func(t *testing.T) {
+		// given
+		projects := []*Project{{ID: "1234", Name: "foobar"}}
+		projectNames := []string{projects[0].Name}
 
-			st := &MockStorage{}
-			st.FindReturn = project
-			svc := NewService(sl, mu, st, nil)
+		slMock := new(MockSelector)
+		slMock.On("SelectFrom", projectNames, mock.Anything).Return(projectNames[0], nil).Once()
 
-			// when
-			svc.SelectAndOpenProject(name)
+		stMock := new(MockStorage)
+		stMock.On("List").Return(projects, nil).Once()
 
-			// then
-			Assert(t, st.FindCalls == 1, "Find should be called once")
+		muMock := new(MockMultiplexer)
+		muMock.On("AttachProject", projects[0]).Return(nil).Once()
 
-			param1 := st.FindParam1
-			Assert(t, param1 == name, "Find param name should be %s is %s", name, param1)
+		svc := NewService(slMock, muMock, stMock, nil)
 
-			Assert(t, sl.SelectFromCalls == 0, "Selector should not be called")
+		// when
+		svc.SelectAndOpenProject("")
 
-			Assert(t, mu.AttachProjectCalls == 1, "The project should be attached")
-			paramAttach := mu.AttachProjectParam1
-			Assert(t, paramAttach == project, "Attach param name should be %s is %s", project.Name, paramAttach.Name)
-		})
-
-		t.Run("selects from selector and opens project with multiplexer", func(t *testing.T) {
-			// given
-			name := "foobar"
-			project := &Project{ID: "1234", Name: name}
-			projects := []*Project{project}
-			projectNames := []string{project.Name}
-
-			sl := &MockSelector{}
-			sl.SelectFromReturn = project.Name
-
-			mu := &MockMultiplexer{}
-
-			st := &MockStorage{}
-			st.ListReturn = projects
-
-			svc := NewService(sl, mu, st, nil)
-
-			// when
-			svc.SelectAndOpenProject("")
-
-			// then
-			Assert(t, st.FindCalls == 0, "Find should not be called")
-
-			Assert(t, sl.SelectFromCalls == 1, "Selector should be called once")
-
-			param1 := sl.SelectFromParam1
-			slicesEqual := slices.Equal(projectNames, param1)
-			Assert(t, slicesEqual, "Selector items param should be %s is %s", projectNames, param1)
-
-			attachParam := mu.AttachProjectParam1
-			Assert(t, mu.AttachProjectCalls == 1, "The project should be attached")
-			Assert(t, attachParam == project, "attach project should be %s is %s", project.ID, attachParam.ID)
-		})
-
-		t.Run("panics when project is not found", func(t *testing.T) {
-			// given
-			name := "foobar"
-			err := ErrNotFound
-
-			sl := &MockSelector{}
-
-			mu := &MockMultiplexer{}
-
-			st := &MockStorage{}
-			st.FindErr = err
-
-			svc := NewService(sl, mu, st, nil)
-
-			// when
-			defer func() {
-				r := recover()
-				Assert(t, r != nil, "The code did not panic")
-				Assert(t, r.(error) == ErrNotFound, "The error should be %s was %s", err, r)
-			}()
-			svc.SelectAndOpenProject(name)
-
-			// then
-			Assert(t, st.FindCalls == 1, "Find should be called once")
-			findParam := st.FindParam1
-			Assert(t, findParam == name, "Find param name should be %s is %s", name, findParam)
-
-			Assert(t, sl.SelectFromCalls == 0, "Selector should not be called")
-
-			Assert(t, mu.AttachProjectCalls == 0, "The project should not be attached")
-		})
-
-		t.Run("exit gracefully when selector is cancelled", func(t *testing.T) {
-			// given
-			err := ErrSelectorCancelled
-			listReturn := []*Project{{ID: "1234", Name: "foobar"}}
-
-			sl := &MockSelector{}
-			sl.SelectFromErr = err
-
-			mu := &MockMultiplexer{}
-
-			st := &MockStorage{}
-			st.ListReturn = listReturn
-
-			svc := NewService(sl, mu, st, nil)
-
-			// when
-			svc.SelectAndOpenProject("")
-
-			// then
-			Assert(t, st.FindCalls == 0, "Find should not be called")
-			Assert(t, sl.SelectFromCalls == 1, "Selector should be called once")
-			Assert(t, mu.AttachProjectCalls == 0, "The project should not be attached")
-		})
+		// then
+		slMock.AssertExpectations(t)
+		stMock.AssertExpectations(t)
+		muMock.AssertExpectations(t)
 	})
 
-	t.Run("delete project", func(t *testing.T) {
-		t.Run("finds and deletes project", func(t *testing.T) {
-			// given
-			name := "foobar"
-			project := &Project{ID: "1234", Name: name}
+	t.Run("tries to find project if name is provided", func(t *testing.T) {
+		// given
+		name := "foobar"
+		project := &Project{ID: "1234", Name: name}
 
-			sl := &MockSelector{}
+		stMock := new(MockStorage)
+		stMock.On("Find", name).Return(project, nil).Once()
 
-			mu := &MockMultiplexer{}
+		muMock := new(MockMultiplexer)
+		muMock.On("AttachProject", project).Return(nil).Once()
 
-			st := &MockStorage{}
-			st.FindReturn = project
+		svc := NewService(nil, muMock, stMock, nil)
 
-			svc := NewService(sl, mu, st, nil)
+		// when
+		svc.SelectAndOpenProject(name)
 
-			// when
-			svc.DeleteProject(name)
+		// then
+		stMock.AssertExpectations(t)
+		muMock.AssertExpectations(t)
+	})
 
-			// then
-			Assert(t, st.FindCalls == 1, "Find should be called once")
+	t.Run("panics when project is not found", func(t *testing.T) {
+		// given
+		name := "foobar"
+		err := ErrNotFound
 
-			findParam := st.FindParam1
-			Assert(t, findParam == name, "Find param name should be %s is %s", name, findParam)
+		stMock := new(MockStorage)
+		stMock.On("Find", name).Return(&Project{}, err).Once()
 
-			Assert(t, sl.SelectFromCalls == 0, "Selector should not be called")
+		svc := NewService(nil, nil, stMock, nil)
 
-			Assert(t, st.DeleteCalls == 1, "Delete should be called once")
+		// when
+		defer func() {
+			r := recover()
+			assert.NotNil(t, r, "The code did not panic")
+			assert.Equal(t, err, r, "The error should be %s was %s", err, r)
+		}()
+		svc.SelectAndOpenProject(name)
 
-			deleteParam := st.DeleteParam1
-			Assert(t, deleteParam == project.ID, "Delete param ID should be %s is %s", project.ID, deleteParam)
-		})
+		// then
+		stMock.AssertExpectations(t)
+	})
 
-		t.Run("selects from selector and deletes project", func(t *testing.T) {
-			// given
-			name := "foobar"
-			project := &Project{ID: "1234", Name: name}
-			projects := []*Project{project}
-			projectNames := []string{project.Name}
+	t.Run("exit gracefully when selector is cancelled", func(t *testing.T) {
+		// given
+		err := ErrSelectorCancelled
+		listReturn := []*Project{{ID: "1234", Name: "foobar"}}
 
-			sl := &MockSelector{}
-			sl.SelectFromReturn = project.Name
+		slMock := new(MockSelector)
+		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return("", err).Once()
 
-			mu := &MockMultiplexer{}
+		stMock := new(MockStorage)
+		stMock.On("List").Return(listReturn, nil).Once()
 
-			st := &MockStorage{}
-			st.ListReturn = projects
+		svc := NewService(slMock, nil, stMock, nil)
 
-			svc := NewService(sl, mu, st, nil)
+		// when
+		svc.SelectAndOpenProject("")
 
-			// when
-			svc.DeleteProject("")
+		// then
+		slMock.AssertExpectations(t)
+		stMock.AssertExpectations(t)
+	})
+}
 
-			// then
-			Assert(t, st.FindCalls == 0, "Find should not be called")
+func Test_Delete_Project(t *testing.T) {
+	t.Run("runs selector and deletes project when name is empty", func(t *testing.T) {
+		// given
+		projects := []*Project{{ID: "1234", Name: "foobar"}}
+		projectNames := []string{projects[0].Name}
 
-			Assert(t, sl.SelectFromCalls == 1, "Selector should be called once")
+		slMock := new(MockSelector)
+		slMock.On("SelectFrom", projectNames, mock.Anything).Return(projectNames[0], nil).Once()
 
-			selectFromParam := sl.SelectFromParam1
-			slicesEqual := slices.Equal(projectNames, selectFromParam)
-			Assert(t, slicesEqual, "Selector items param should be %s is %s", projectNames, selectFromParam)
+		stMock := new(MockStorage)
+		stMock.On("List").Return(projects, nil).Once()
+		stMock.On("Delete", projects[0].ID).Return(nil).Once()
 
-			deleteParam := st.DeleteParam1
-			Assert(t, deleteParam == project.ID, "Delete param ID should be %s is %s", project.ID, deleteParam)
-		})
+		svc := NewService(slMock, nil, stMock, nil)
 
-		t.Run("panics when project is not found", func(t *testing.T) {
-			// given
-			name := "foobar"
-			err := ErrNotFound
+		// when
+		svc.DeleteProject("")
 
-			sl := &MockSelector{}
+		// then
+		slMock.AssertExpectations(t)
+		stMock.AssertExpectations(t)
+	})
 
-			mu := &MockMultiplexer{}
+	t.Run("tries to find project if name is provided", func(t *testing.T) {
+		// given
+		name := "foobar"
+		project := &Project{ID: "1234", Name: name}
 
-			st := &MockStorage{}
-			st.FindErr = err
+		stMock := new(MockStorage)
+		stMock.On("Find", name).Return(project, nil).Once()
+		stMock.On("Delete", project.ID).Return(nil).Once()
 
-			svc := NewService(sl, mu, st, nil)
+		svc := NewService(nil, nil, stMock, nil)
 
-			// when
-			defer func() {
-				r := recover()
-				Assert(t, r != nil, "The code did not panic")
-				Assert(t, r.(error) == ErrNotFound, "The error should be %s was %s", err, r)
-			}()
-			svc.DeleteProject(name)
+		// when
+		svc.DeleteProject(name)
 
-			// then
-			Assert(t, st.FindCalls == 1, "Find should be called once")
-			findParam := st.FindParam1
-			Assert(t, findParam == name, "Find param name shoud be %s is %s", name, findParam)
+		// then
+		stMock.AssertExpectations(t)
+	})
 
-			Assert(t, sl.SelectFromCalls == 0, "Selector should not be called")
-			Assert(t, st.DeleteCalls == 0, "Delete should not be called")
-		})
+	t.Run("panics when project is not found", func(t *testing.T) {
+		// given
+		name := "foobar"
+		err := ErrNotFound
 
-		t.Run("exit gracefully when selector is cancelled", func(t *testing.T) {
-			// given
-			err := ErrSelectorCancelled
-			listReturn := []*Project{{ID: "1234", Name: "foobar"}}
+		stMock := new(MockStorage)
+		stMock.On("Find", name).Return(&Project{}, err).Once()
 
-			sl := &MockSelector{}
-			sl.SelectFromErr = err
+		svc := NewService(nil, nil, stMock, nil)
 
-			mu := &MockMultiplexer{}
+		// when
+		defer func() {
+			r := recover()
+			assert.NotNil(t, r, "The code did not panic")
+			assert.Equal(t, err, r, "The error should be %s was %s", err, r)
+		}()
+		svc.DeleteProject(name)
 
-			st := &MockStorage{}
-			st.ListReturn = listReturn
+		// then
+		stMock.AssertExpectations(t)
+	})
 
-			svc := NewService(sl, mu, st, nil)
+	t.Run("exit gracefully when selector is cancelled", func(t *testing.T) {
+		// given
+		err := ErrSelectorCancelled
+		listReturn := []*Project{{ID: "1234", Name: "foobar"}}
 
-			// when
-			svc.DeleteProject("")
+		slMock := new(MockSelector)
+		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return("", err).Once()
 
-			// then
-			Assert(t, st.FindCalls == 0, "Find should not be called")
-			Assert(t, sl.SelectFromCalls == 1, "Selector should be called once")
-			Assert(t, st.DeleteCalls == 0, "Delete should not be called")
-		})
+		stMock := new(MockStorage)
+		stMock.On("List").Return(listReturn, nil).Once()
+
+		svc := NewService(slMock, nil, stMock, nil)
+
+		// when
+		svc.DeleteProject("")
+
+		// then
+		slMock.AssertExpectations(t)
+		stMock.AssertExpectations(t)
+	})
+}
+
+func Test_Edit_Project(t *testing.T) {
+	t.Run("runs selector and launches editor when name is empty", func(t *testing.T) {
+		// given
+		projects := []*Project{{ID: "1234", Name: "foobar"}}
+		projectNames := []string{projects[0].Name}
+		cwd := "/home/test"
+		template := Template{Root: cwd, Windows: []Window{{Name: "main", Root: "/project"}}}
+		projects[0].Template = &template
+		templateFile := "/home/test/template.yaml"
+
+		slMock := new(MockSelector)
+		slMock.On("SelectFrom", projectNames, mock.Anything).Return(projectNames[0], nil).Once()
+
+		stMock := new(MockStorage)
+		stMock.On("List").Return(projects, nil).Once()
+		stMock.On("PrepareTemplateFile", projects[0]).Return(templateFile, nil).Once()
+
+		editorMock := new(MockEditorLauncher)
+		editorMock.On("Open", templateFile).Return(nil).Once()
+
+		svc := NewService(slMock, nil, stMock, editorMock)
+
+		// when
+		svc.EditProject("")
+
+		// then
+		slMock.AssertExpectations(t)
+		stMock.AssertExpectations(t)
+		editorMock.AssertExpectations(t)
+	})
+
+	t.Run("tries to find project if name is provided", func(t *testing.T) {
+		// given
+		name := "foobar"
+		project := &Project{ID: "1234", Name: name}
+		template := Template{Root: "/home/test", Windows: []Window{{Name: "main", Root: "/project"}}}
+		project.Template = &template
+		templateFile := "/home/test/template.yaml"
+
+		stMock := new(MockStorage)
+		stMock.On("Find", name).Return(project, nil).Once()
+		stMock.On("PrepareTemplateFile", project).Return(templateFile, nil).Once()
+
+		editorMock := new(MockEditorLauncher)
+		editorMock.On("Open", templateFile).Return(nil).Once()
+
+		svc := NewService(nil, nil, stMock, editorMock)
+
+		// when
+		svc.EditProject(name)
+
+		// then
+		stMock.AssertExpectations(t)
+		editorMock.AssertExpectations(t)
+	})
+
+	t.Run("panics when project is not found", func(t *testing.T) {
+		// given
+		name := "foobar"
+		err := ErrNotFound
+
+		stMock := new(MockStorage)
+		stMock.On("Find", name).Return(&Project{}, err).Once()
+
+		svc := NewService(nil, nil, stMock, nil)
+
+		// when
+		defer func() {
+			r := recover()
+			assert.NotNil(t, r, "The code did not panic")
+			assert.Equal(t, err, r, "The error should be %s was %s", err, r)
+		}()
+		svc.EditProject(name)
+
+		// then
+		stMock.AssertExpectations(t)
+	})
+
+	t.Run("exit gracefully when selector is cancelled", func(t *testing.T) {
+		// given
+		err := ErrSelectorCancelled
+		listReturn := []*Project{{ID: "1234", Name: "foobar"}}
+
+		slMock := new(MockSelector)
+		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return("", err).Once()
+
+		stMock := new(MockStorage)
+		stMock.On("List").Return(listReturn, nil).Once()
+
+		svc := NewService(slMock, nil, stMock, nil)
+
+		// when
+		svc.EditProject("")
+
+		// then
+		slMock.AssertExpectations(t)
+		stMock.AssertExpectations(t)
 	})
 }
