@@ -4,89 +4,85 @@ import (
 	"bytes"
 	"errors"
 	"os/exec"
-	"slices"
 	"testing"
 	. "thop/dom/model"
-	. "thop/dom/utils"
 	. "thop/infra/fzf"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 type MockCommandExecutor struct {
-	ExecuteParam1   *exec.Cmd
-	ExecuteCalls    int
-	ExecuteReturn   string
-	ExecuteErr      error
-	ExecuteExitCode int
+	mock.Mock
 }
 
 func (m *MockCommandExecutor) Execute(cmd *exec.Cmd) (string, int, error) {
-	m.ExecuteParam1 = cmd
-	m.ExecuteCalls++
-	return m.ExecuteReturn, m.ExecuteExitCode, m.ExecuteErr
+	args := m.Called(cmd)
+	return args.String(0), args.Int(1), args.Error(2)
 }
 
 func (m *MockCommandExecutor) ExecuteInteractive(cmd *exec.Cmd) (int, error) {
-	return 0, nil // not used in this test suite
+	args := m.Called(cmd)
+	return args.Int(0), args.Error(1)
 }
 
-func Test_FzfSelector(t *testing.T) {
-	t.Run("select from items", func(t *testing.T) {
+func Test_SelectFrom(t *testing.T) {
+	t.Run("selects from items", func(t *testing.T) {
 		// given
-		executor := &MockCommandExecutor{}
-		executor.ExecuteReturn = "bar\n" // should contain new line char due to input buffer
-		selector := NewFzfSelector(executor)
-
 		prompt := "foo prompt > "
-		expectedCommand := exec.Command("fzf", "--prompt", prompt)
+		args := []string{"fzf", "--prompt", prompt}
+		var cmdToExec *exec.Cmd
+		cmdResult := "bar\n" // new line char due to input buffer separation needed by fzf
+
+		execMock := new(MockCommandExecutor)
+		execMock.On("Execute", mock.Anything).Run(func(args mock.Arguments) {
+			cmdToExec = args.Get(0).(*exec.Cmd)
+		}).Return(cmdResult, 0, nil).Once()
+
+		selector := NewFzfSelector(execMock)
 
 		// when
 		selected, err := selector.SelectFrom([]string{"foo", "bar", "baz"}, prompt)
 
 		// then
-		Assert(t, err == nil, "Error should be nil")
-		Assert(t, executor.ExecuteCalls == 1, "Execute should be called once")
+		assert.Nil(t, err)
+		assert.Equal(t, "bar", selected)
+		execMock.AssertExpectations(t)
 
-		cmdParam := executor.ExecuteParam1
-		Assert(t, slices.Equal(expectedCommand.Args, cmdParam.Args), "Execute param should be %s is %s", expectedCommand, cmdParam)
+		assert.Equal(t, cmdToExec.Args, args)
 
-		stdin := cmdParam.Stdin.(*bytes.Buffer) // should be sorted
-		Assert(t, stdin.String() == "bar\nbaz\nfoo\n", "Stdin should be %s is %s", "bar\nbaz\nfoo\n", stdin.String())
-		Assert(t, selected == "bar", "Selected item should be %s is %s", "bar", selected)
+		stdin := cmdToExec.Stdin.(*bytes.Buffer)
+		assert.Equal(t, "bar\nbaz\nfoo\n", stdin.String(), "stdin should be sorted")
 	})
 
-	t.Run("select maps exit code 130 to ErrSelectorCancelled", func(t *testing.T) {
+	t.Run("select maps 130 exit code to ErrSelectorCancelled", func(t *testing.T) {
 		// given
-		executor := &MockCommandExecutor{}
-		executor.ExecuteReturn = "foo\n"
-		executor.ExecuteExitCode = 130
+		execMock := new(MockCommandExecutor)
+		execMock.On("Execute", mock.Anything).Return("foo", 130, nil).Once()
 
-		selector := NewFzfSelector(executor)
-
-		prompt := "foo prompt > "
+		selector := NewFzfSelector(execMock)
 
 		// when
-		_, err := selector.SelectFrom([]string{"foo", "bar", "baz"}, prompt)
+		_, err := selector.SelectFrom([]string{"foo", "bar", "baz"}, "foo prompt > ")
 
 		// then
-		Assert(t, err == ErrSelectorCancelled, "Error should be %s is %s", ErrSelectorCancelled, err)
-		Assert(t, executor.ExecuteCalls == 1, "Execute should be called once")
+		assert.Equal(t, ErrSelectorCancelled, err)
+		execMock.AssertExpectations(t)
 	})
 
 	t.Run("select propagates errors", func(t *testing.T) {
 		// given
-		executor := &MockCommandExecutor{}
+		execMock := new(MockCommandExecutor)
 		expectedErr := errors.New("unknown error")
-		executor.ExecuteErr = expectedErr
+		execMock.On("Execute", mock.Anything).Return("", 0, expectedErr).Once()
 
-		selector := NewFzfSelector(executor)
-
-		prompt := "foo prompt > "
+		selector := NewFzfSelector(execMock)
 
 		// when
-		_, err := selector.SelectFrom([]string{"foo", "bar", "baz"}, prompt)
+		_, err := selector.SelectFrom([]string{"foo", "bar", "baz"}, "foo prompt > ")
 
 		// then
-		Assert(t, expectedErr == err, "Error should be %s is %s", expectedErr, err)
-		Assert(t, executor.ExecuteCalls == 1, "Execute should be called once")
+		assert.Equal(t, expectedErr, err)
+		execMock.AssertExpectations(t)
 	})
 }
