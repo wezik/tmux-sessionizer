@@ -26,8 +26,8 @@ func main() {
 	e := shell.NewCommandExecutor()
 	sl := fzf.NewFzfSelector(e)
 
-	tc := tmux.NewTmuxClient()
-	mu := tmux.NewTmuxMultiplexer(e, tc)
+	tc := tmux.NewTmuxClient(e)
+	mu := tmux.NewTmuxMultiplexer(tc)
 
 	st := yaml.NewYamlStorage(cfg, fs)
 
