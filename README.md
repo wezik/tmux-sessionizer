@@ -84,7 +84,6 @@ This project is in a very early experimental stage, I am figuring out how I want
 
 ## Ideas / TODO's
 - Refactor tmux unit tests to testify
-- Refactor yaml unit tests to testify
 - Panes support
 - Integration tests
 - General config file, launchable from command
