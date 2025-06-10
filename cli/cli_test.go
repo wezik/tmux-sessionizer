@@ -27,7 +27,7 @@ func (s *MockService) EditProject(name string) {
 	s.Called(name)
 }
 
-func Test_Select_Command(t *testing.T) {
+func Test_SelectCommand(t *testing.T) {
 	t.Run("selects project with empty name", func(t *testing.T) {
 		variants := [][]string{
 			{"select"},
@@ -72,7 +72,7 @@ func Test_Select_Command(t *testing.T) {
 	})
 }
 
-func Test_Create_Command(t *testing.T) {
+func Test_CreateCommand(t *testing.T) {
 	t.Run("creates project with no args", func(t *testing.T) {
 		variants := [][]string{
 			{"create"},
@@ -149,7 +149,7 @@ func Test_Create_Command(t *testing.T) {
 	})
 }
 
-func Test_Delete_Command(t *testing.T) {
+func Test_DeleteCommand(t *testing.T) {
 	t.Run("deletes project with no args", func(t *testing.T) {
 		variants := [][]string{
 			{"delete"},
@@ -193,7 +193,7 @@ func Test_Delete_Command(t *testing.T) {
 	})
 }
 
-func Test_Edit_Command(t *testing.T) {
+func Test_EditCommand(t *testing.T) {
 	t.Run("edits project with no args", func(t *testing.T) {
 		variants := [][]string{
 			{"edit"},

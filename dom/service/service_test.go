@@ -66,7 +66,7 @@ func (s *MockEditorLauncher) Open(path string) error {
 	return args.Error(0)
 }
 
-func Test_Create_Project(t *testing.T) {
+func Test_CreateProject(t *testing.T) {
 	t.Run("creates project", func(t *testing.T) {
 		// given
 		stMock := new(MockStorage)
@@ -110,7 +110,7 @@ func Test_Create_Project(t *testing.T) {
 	})
 }
 
-func Test_Select_And_Open_Project(t *testing.T) {
+func Test_SelectAndOpenProject(t *testing.T) {
 	t.Run("runs selector and attaches to project when name is empty", func(t *testing.T) {
 		// given
 		projects := []*Project{{ID: "1234", Name: "foobar"}}
@@ -201,7 +201,7 @@ func Test_Select_And_Open_Project(t *testing.T) {
 	})
 }
 
-func Test_Delete_Project(t *testing.T) {
+func Test_DeleteProject(t *testing.T) {
 	t.Run("runs selector and deletes project when name is empty", func(t *testing.T) {
 		// given
 		projects := []*Project{{ID: "1234", Name: "foobar"}}
@@ -286,7 +286,7 @@ func Test_Delete_Project(t *testing.T) {
 	})
 }
 
-func Test_Edit_Project(t *testing.T) {
+func Test_EditProject(t *testing.T) {
 	t.Run("runs selector and launches editor when name is empty", func(t *testing.T) {
 		// given
 		projects := []*Project{{ID: "1234", Name: "foobar"}}
