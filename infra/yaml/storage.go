@@ -48,7 +48,9 @@ func (s *YamlStorage) List() ([]*Project, error) {
 			continue
 		}
 
-		templateFile := filepath.Join(templatesDir, dir.Name(), templateFileName)
+		dirName := dir.Name()
+
+		templateFile := filepath.Join(templatesDir, dirName, templateFileName)
 		bytes, err := s.fs.ReadFile(templateFile)
 		if err != nil {
 			fmt.Println(err)
@@ -61,7 +63,7 @@ func (s *YamlStorage) List() ([]*Project, error) {
 			continue
 		}
 
-		project.ID = dir.Name()
+		project.ID = dirName
 		projects = append(projects, &project)
 	}
 
