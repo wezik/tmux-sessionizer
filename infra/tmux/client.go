@@ -15,7 +15,7 @@ type TmuxClient interface {
 	NewSession(sessionName, sessionRoot, windowName, windowRoot string) error
 	NewWindow(sessionName, sessionRoot, windowName, windowRoot string) error
 	SendKeys(sessionName, windowName, keys string) error
-	IsInTmuxSession () bool
+	IsInTmuxSession() bool
 }
 
 type TmuxClientImpl struct {
@@ -169,5 +169,3 @@ func (c *TmuxClientImpl) IsInTmuxSession() bool {
 	// TMUX is set when tmux is running plain and simple
 	return os.Getenv("TMUX") != ""
 }
-
-
