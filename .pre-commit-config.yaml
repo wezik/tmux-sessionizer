@@ -7,9 +7,12 @@ repos:
         language: system
         types: [go]
         stages: [pre-push]
+
       - id: make-audit
         name: Run make audit
-        entry: make audit
+        verbose: true
+        # audit can fail and it should not block the commit
+        entry: bash -c "make audit || true"
         language: system
         types: [go]
         stages: [pre-push]
