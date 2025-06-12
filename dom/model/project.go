@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	. "thop/dom/utils"
 
 	"github.com/google/uuid"
 )
@@ -58,9 +59,7 @@ func NewProject(name string, template *Template) (*Project, error) {
 }
 
 func NewTemplate(root string, windows []Window) (*Template, error) {
-	if len(windows) == 0 {
-		return nil, ErrNeedsWindow
-	}
+	EnsureWithErr(len(windows) > 0, ErrNeedsWindow)
 
 	return &Template{
 		Root:    root,

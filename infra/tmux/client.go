@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	. "thop/dom/service"
+
+	"github.com/dsnet/try"
 )
 
 type TmuxClient interface {
@@ -26,30 +28,35 @@ func NewTmuxClient(e CommandExecutor) *TmuxClientImpl {
 	return &TmuxClientImpl{e: e}
 }
 
-func (c *TmuxClientImpl) AttachSession(sessionName string) error {
+func (c *TmuxClientImpl) AttachSession(sessionName string) (err error) {
+	defer try.HandleF(&err, func() {
+		err = fmt.Errorf("tmux attach failed: %w", err)
+	})
+
 	if sessionName == "" {
 		return errors.New("session name cannot be empty")
 	}
 
 	cmd := exec.Command("tmux", "attach", "-t", sessionName)
 	cmd.Stdin = os.Stdin // bind tmux session to terminal
-	if _, _, err := c.e.Execute(cmd); err != nil {
-		return errors.New("tmux attach failed")
-	}
+
+	try.E2(c.e.Execute(cmd))
 
 	return nil
 }
 
-func (c *TmuxClientImpl) SwitchSession(sessionName string) error {
+func (c *TmuxClientImpl) SwitchSession(sessionName string) (err error) {
+	defer try.HandleF(&err, func() {
+		err = fmt.Errorf("tmux switch failed: %w", err)
+	})
+
 	if sessionName == "" {
 		return errors.New("session name cannot be empty")
 	}
 
 	cmd := exec.Command("tmux", "switch", "-t", sessionName)
 
-	if _, _, err := c.e.Execute(cmd); err != nil {
-		return errors.New("tmux switch failed")
-	}
+	try.E2(c.e.Execute(cmd))
 
 	return nil
 }
@@ -67,13 +74,17 @@ func (c *TmuxClientImpl) HasSession(sessionName string) (bool, error) {
 		if exitCode == 1 {
 			return false, nil
 		}
-		return false, errors.New("tmux has-session failed")
+		return false, fmt.Errorf("tmux has-session failed: %w", err)
 	}
 
 	return exitCode == 0, nil
 }
 
-func (c *TmuxClientImpl) NewSession(sessionName, sessionRoot, windowName, windowRoot string) error {
+func (c *TmuxClientImpl) NewSession(sessionName, sessionRoot, windowName, windowRoot string) (err error) {
+	defer try.HandleF(&err, func() {
+		err = fmt.Errorf("tmux new-session failed: %w", err)
+	})
+
 	if sessionName == "" {
 		return errors.New("session name cannot be empty")
 	}
@@ -96,14 +107,16 @@ func (c *TmuxClientImpl) NewSession(sessionName, sessionRoot, windowName, window
 		cmd.Args = append(cmd.Args, fmt.Sprintf("cd %s && exec $SHELL", windowRoot))
 	}
 
-	if _, _, err := c.e.Execute(cmd); err != nil {
-		return errors.New("tmux new-session failed")
-	}
+	try.E2(c.e.Execute(cmd))
 
 	return nil
 }
 
-func (c *TmuxClientImpl) NewWindow(sessionName, sessionRoot, windowName, windowRoot string) error {
+func (c *TmuxClientImpl) NewWindow(sessionName, sessionRoot, windowName, windowRoot string) (err error) {
+	defer try.HandleF(&err, func() {
+		err = fmt.Errorf("tmux new-window failed: %w", err)
+	})
+
 	if sessionName == "" {
 		return errors.New("session name cannot be empty")
 	}
@@ -128,15 +141,17 @@ func (c *TmuxClientImpl) NewWindow(sessionName, sessionRoot, windowName, windowR
 		cmd.Args = append(cmd.Args, "-c", sessionRoot)
 	}
 
-	if _, _, err := c.e.Execute(cmd); err != nil {
-		return errors.New("tmux new-window failed")
-	}
+	try.E2(c.e.Execute(cmd))
 
 	return nil
 
 }
 
-func (c *TmuxClientImpl) SendKeys(sessionName, windowName, keys string) error {
+func (c *TmuxClientImpl) SendKeys(sessionName, windowName, keys string) (err error) {
+	defer try.HandleF(&err, func() {
+		err = fmt.Errorf("tmux send-keys failed: %w", err)
+	})
+
 	if sessionName == "" {
 		return errors.New("session name cannot be empty")
 	}
@@ -157,12 +172,9 @@ func (c *TmuxClientImpl) SendKeys(sessionName, windowName, keys string) error {
 	cmd.Args = append(cmd.Args, keys)
 	cmd.Args = append(cmd.Args, "C-m")
 
-	if _, _, err := c.e.Execute(cmd); err != nil {
-		return errors.New("tmux send-keys failed")
-	}
+	try.E2(c.e.Execute(cmd))
 
 	return nil
-
 }
 
 func (c *TmuxClientImpl) IsInTmuxSession() bool {

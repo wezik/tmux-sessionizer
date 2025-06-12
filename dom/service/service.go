@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	. "thop/dom/model"
 	. "thop/dom/utils"
+
+	"github.com/dsnet/try"
 )
 
 type Service interface {
@@ -63,17 +65,11 @@ func (s *ServiceImpl) CreateProject(cwd, name string) {
 	Ensure(name != "", "name cannot be empty")
 	Ensure(cwd != "", "cwd cannot be empty")
 
-	window, err := NewWindow("shell")
-	EnsureWithErr(err == nil, err)
+	window := try.E1(NewWindow("shell"))
+	template := try.E1(NewTemplate(cwd, []Window{*window}))
+	project := try.E1(NewProject(name, template))
 
-	template, err := NewTemplate(cwd, []Window{*window})
-	EnsureWithErr(err == nil, err)
-
-	project, err := NewProject(name, template)
-	EnsureWithErr(err == nil, err)
-
-	err = s.st.Save(project)
-	EnsureWithErr(err == nil, err)
+	try.E(s.st.Save(project))
 }
 
 func (s *ServiceImpl) SelectAndOpenProject(name string) {
@@ -87,8 +83,7 @@ func (s *ServiceImpl) SelectAndOpenProject(name string) {
 		panic(err)
 	}
 
-	err = s.mu.AttachProject(project)
-	EnsureWithErr(err == nil, err)
+	try.E(s.mu.AttachProject(project))
 }
 
 func (s *ServiceImpl) DeleteProject(name string) {
@@ -102,12 +97,12 @@ func (s *ServiceImpl) DeleteProject(name string) {
 		panic(err)
 	}
 
-	err = s.st.Delete(project.ID)
-	EnsureWithErr(err == nil, err)
+	try.E(s.st.Delete(project.ID))
 }
 
 func (s *ServiceImpl) EditProject(name string) {
 	project, err := s.findOrSelect(name, "Select project to edit > ")
+
 	if err == ErrSelectorCancelled {
 		fmt.Println("Edit operation cancelled")
 		return
@@ -115,34 +110,27 @@ func (s *ServiceImpl) EditProject(name string) {
 		panic(err)
 	}
 
-	templatePath, err := s.st.PrepareTemplateFile(project)
-	EnsureWithErr(err == nil, err)
+	templatePath := try.E1(s.st.PrepareTemplateFile(project))
 
-	err = s.el.Open(templatePath)
-	EnsureWithErr(err == nil, err)
+	try.E(s.el.Open(templatePath))
 }
 
-func (s *ServiceImpl) findOrSelect(name string, prompt string) (*Project, error) {
+func (s *ServiceImpl) findOrSelect(name string, prompt string) (p *Project, err error) {
+	defer try.Handle(&err)
+
 	if name != "" {
 		return s.st.Find(name)
 	}
 
-	projects, err := s.st.List()
-	if err != nil {
-		return nil, err
-	}
-
-	selected, err := s.selectProject(projects, prompt)
-	if err == ErrSelectorCancelled {
-		return nil, err
-	}
-
-	Ensure(err == nil, "Unknown error occured while selecting the project")
+	projects := try.E1(s.st.List())
+	selected := try.E1(s.selectProject(projects, prompt))
 
 	return selected, nil
 }
 
-func (s *ServiceImpl) selectProject(items []*Project, prompt string) (*Project, error) {
+func (s *ServiceImpl) selectProject(items []*Project, prompt string) (p *Project, err error) {
+	defer try.Handle(&err)
+
 	itemsStringified := make([]string, len(items))
 	itemsMap := make(map[string]*Project)
 
@@ -151,16 +139,7 @@ func (s *ServiceImpl) selectProject(items []*Project, prompt string) (*Project, 
 		itemsMap[item.Name] = item
 	}
 
-	selectedString, err := s.sl.SelectFrom(itemsStringified, prompt)
-	if err == ErrSelectorCancelled {
-		return nil, err // in case of cancellation, propagate the error upwards
-	}
-
-	EnsureWithErr(err == nil, err)
-
-	// this is a bit redundant, but the more fail-safes the better,
-	// it would require faulty implementation of the selector
-	EnsureWithErr(selectedString != "", ErrSelectorCancelled)
+	selectedString := try.E1(s.sl.SelectFrom(itemsStringified, prompt))
 
 	selected, ok := itemsMap[selectedString]
 	Ensure(ok, "selected item that does not exist")

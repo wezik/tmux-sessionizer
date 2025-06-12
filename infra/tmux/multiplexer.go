@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	. "thop/dom/model"
+
+	"github.com/dsnet/try"
 )
 
 type TmuxMultiplexer struct {
@@ -14,16 +16,12 @@ func NewTmuxMultiplexer(client TmuxClient) *TmuxMultiplexer {
 	return &TmuxMultiplexer{c: client}
 }
 
-func (m *TmuxMultiplexer) AttachProject(p *Project) error {
-	sessionName, err := resolveSessionName(p)
-	if err != nil {
-		return errors.New("failed to resolve session name")
-	}
+func (m *TmuxMultiplexer) AttachProject(p *Project) (err error) {
+	defer try.Handle(&err)
 
-	sessionExists, err := m.c.HasSession(sessionName)
-	if err != nil {
-		return err
-	}
+	sessionName := try.E1(resolveSessionName(p))
+
+	sessionExists := try.E1(m.c.HasSession(sessionName))
 
 	if !sessionExists {
 		if len(p.Template.Windows) == 0 {
@@ -34,32 +32,20 @@ func (m *TmuxMultiplexer) AttachProject(p *Project) error {
 		mainWindow := p.Template.Windows[0]
 
 		// first window gets created together with the session
-		err := m.c.NewSession(sessionName, sessionRoot, mainWindow.Name, mainWindow.Root)
-		if err != nil {
-			return err
-		}
+		try.E(m.c.NewSession(sessionName, sessionRoot, mainWindow.Name, mainWindow.Root))
 
 		for i, window := range p.Template.Windows {
 			// main window is already created, so skip it
 			if i != 0 {
-				err := m.c.NewWindow(sessionName, sessionRoot, window.Name, window.Root)
-				if err != nil {
-					return err
-				}
+				try.E(m.c.NewWindow(sessionName, sessionRoot, window.Name, window.Root))
 			}
 
 			for _, keys := range p.Template.Commands {
-				err := m.c.SendKeys(sessionName, window.Name, keys)
-				if err != nil {
-					return err
-				}
+				try.E(m.c.SendKeys(sessionName, window.Name, keys))
 			}
 
 			for _, keys := range window.Commands {
-				err := m.c.SendKeys(sessionName, window.Name, keys)
-				if err != nil {
-					return err
-				}
+				try.E(m.c.SendKeys(sessionName, window.Name, keys))
 			}
 		}
 
@@ -68,13 +54,13 @@ func (m *TmuxMultiplexer) AttachProject(p *Project) error {
 
 	if m.c.IsInTmuxSession() {
 		fmt.Println("Switching to", sessionName, "session")
-		err = m.c.SwitchSession(sessionName)
+		try.E(m.c.SwitchSession(sessionName))
 	} else {
 		fmt.Println("Attaching to", sessionName, "session")
-		err = m.c.AttachSession(sessionName)
+		try.E(m.c.AttachSession(sessionName))
 	}
 
-	return err
+	return nil
 }
 
 func resolveSessionName(p *Project) (string, error) {

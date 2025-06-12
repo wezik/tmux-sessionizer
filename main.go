@@ -12,15 +12,16 @@ import (
 	"thop/infra/shell"
 	"thop/infra/tmux"
 	"thop/infra/yaml"
+
+	"github.com/dsnet/try"
 )
 
 func main() {
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		panic(err)
-	}
+	userConfigDir := try.E1(os.UserConfigDir())
 
-	cfg := cfg.NewConfig(filepath.Join(userConfigDir, "thop"))
+	configPath := filepath.Join(userConfigDir, "thop")
+	cfg := cfg.NewConfig(configPath)
+
 	fs := fs.NewOsFileSystem()
 
 	e := shell.NewCommandExecutor()

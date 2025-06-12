@@ -7,6 +7,7 @@ import (
 	. "thop/dom/model"
 	. "thop/dom/service"
 
+	"github.com/dsnet/try"
 	"github.com/goccy/go-yaml"
 	"github.com/google/uuid"
 )
@@ -25,21 +26,18 @@ var (
 	templatesDirName = "templates"
 )
 
-func (s *YamlStorage) List() ([]*Project, error) {
+func (s *YamlStorage) List() (_ []*Project, err error) {
+	defer try.Handle(&err)
+
 	cfgDir := s.config.GetConfigDir()
 
 	templatesDir := filepath.Join(cfgDir, templatesDirName)
 
 	// from what I understand, running os.Stat to check if a dir exists is not really providing
 	// any benefits, and can also introduce weird edge cases, so instead just run mkdir everytime
-	if err := s.fs.MkdirAll(templatesDir); err != nil {
-		return nil, err
-	}
+	try.E(s.fs.MkdirAll(templatesDir))
 
-	dirs, err := s.fs.ReadDir(templatesDir)
-	if err != nil {
-		return nil, err
-	}
+	dirs := try.E1(s.fs.ReadDir(templatesDir))
 
 	var projects []*Project
 
@@ -70,11 +68,10 @@ func (s *YamlStorage) List() ([]*Project, error) {
 	return projects, nil
 }
 
-func (s *YamlStorage) Find(name string) (*Project, error) {
-	projects, err := s.List()
-	if err != nil {
-		return nil, err
-	}
+func (s *YamlStorage) Find(name string) (_ *Project, err error) {
+	defer try.Handle(&err)
+
+	projects := try.E1(s.List())
 
 	for _, project := range projects {
 		if project.Name == name {
@@ -85,7 +82,9 @@ func (s *YamlStorage) Find(name string) (*Project, error) {
 	return nil, ErrNotFound
 }
 
-func (s *YamlStorage) Save(p *Project) error {
+func (s *YamlStorage) Save(p *Project) (err error) {
+	defer try.Handle(&err)
+
 	if p.ID == "" {
 		p.ID = uuid.New().String()
 	}
@@ -93,15 +92,10 @@ func (s *YamlStorage) Save(p *Project) error {
 	cfgDir := s.config.GetConfigDir()
 	templateDir := filepath.Join(cfgDir, templatesDirName, p.ID)
 
-	if err := s.fs.MkdirAll(templateDir); err != nil {
-		return err
-	}
+	try.E(s.fs.MkdirAll(templateDir))
 
 	templateFile := filepath.Join(templateDir, templateFileName)
-	bytes, err := yaml.Marshal(p)
-	if err != nil {
-		return err
-	}
+	bytes := try.E1(yaml.Marshal(p))
 
 	return s.fs.WriteFile(templateFile, bytes)
 }
