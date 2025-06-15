@@ -2,18 +2,17 @@ package fzf
 
 import (
 	"bytes"
-	"os/exec"
 	"slices"
-	. "thop/dom/model"
-	. "thop/dom/service"
+	"thop/dom/executor"
+	"thop/dom/selector"
 )
 
 type FzfSelector struct {
-	e CommandExecutor
+	e executor.CommandExecutor
 }
 
-func NewFzfSelector(executor CommandExecutor) *FzfSelector {
-	return &FzfSelector{e: executor}
+func New(e executor.CommandExecutor) *FzfSelector {
+	return &FzfSelector{e: e}
 }
 
 func (s *FzfSelector) SelectFrom(items []string, prompt string) (string, error) {
@@ -24,17 +23,17 @@ func (s *FzfSelector) SelectFrom(items []string, prompt string) (string, error) 
 		input.WriteString(item + "\n")
 	}
 
-	cmd := exec.Command("fzf")
+	cmd := executor.Command("fzf")
 	cmd.Stdin = &input
 	cmd.Args = append(cmd.Args, "--prompt", prompt)
 
 	output, exitCode, err := s.e.Execute(cmd)
 	if exitCode == 130 {
-		return "", ErrSelectorCancelled
+		return "", selector.ErrCancelled.WithMessage("Selection cancelled")
 	} else if err != nil {
-		return "", err
+		return "", selector.ErrSelectorFailed.WithMessage(err.Error())
 	}
 
-	output = output[:len(output)-1]
+	output = output[:len(output)-1] // trim trailing newline
 	return output, nil
 }

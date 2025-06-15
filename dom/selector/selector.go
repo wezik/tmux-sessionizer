@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	ErrCancelled        problem.Key = "SELECTOR_CANCELLED"
-	SelectorFailedError problem.Key = "SELECTOR_FAILED"
+	ErrCancelled      problem.Key = "SELECTOR_CANCELLED"
+	ErrSelectorFailed problem.Key = "SELECTOR_FAILED"
 )
 
 type Selector interface {

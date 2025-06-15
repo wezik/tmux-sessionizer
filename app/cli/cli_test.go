@@ -2,7 +2,7 @@ package cli_test
 
 import (
 	"testing"
-	. "thop/cli"
+	. "thop/app"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -40,7 +40,7 @@ func Test_SelectCommand(t *testing.T) {
 			svcMock := new(MockService)
 			svcMock.On("SelectAndOpenProject", "").Once()
 
-			cli := NewCli(svcMock)
+			cli := New(svcMock)
 
 			// when
 			cli.Run(args)
@@ -61,7 +61,7 @@ func Test_SelectCommand(t *testing.T) {
 			svcMock := new(MockService)
 			svcMock.On("SelectAndOpenProject", "foobar").Once()
 
-			cli := NewCli(svcMock)
+			cli := New(svcMock)
 
 			// when
 			cli.Run(args)
@@ -88,7 +88,7 @@ func Test_CreateCommand(t *testing.T) {
 			svcMock := new(MockService)
 			svcMock.On("CreateProject", mock.Anything, mock.Anything).Once()
 
-			cli := NewCli(svcMock)
+			cli := New(svcMock)
 
 			// when
 			cli.Run(args)
@@ -113,7 +113,7 @@ func Test_CreateCommand(t *testing.T) {
 			svcMock := new(MockService)
 			svcMock.On("CreateProject", mock.Anything, "foobar").Once()
 
-			cli := NewCli(svcMock)
+			cli := New(svcMock)
 
 			// when
 			cli.Run(args)
@@ -138,7 +138,7 @@ func Test_CreateCommand(t *testing.T) {
 			svcMock := new(MockService)
 			svcMock.On("CreateProject", "/home/test", "foobar").Once()
 
-			cli := NewCli(svcMock)
+			cli := New(svcMock)
 
 			// when
 			cli.Run(args)
@@ -161,7 +161,7 @@ func Test_DeleteCommand(t *testing.T) {
 			svcMock := new(MockService)
 			svcMock.On("DeleteProject", mock.Anything).Once()
 
-			cli := NewCli(svcMock)
+			cli := New(svcMock)
 
 			// when
 			cli.Run(args)
@@ -182,7 +182,7 @@ func Test_DeleteCommand(t *testing.T) {
 			svcMock := new(MockService)
 			svcMock.On("DeleteProject", "foobar").Once()
 
-			cli := NewCli(svcMock)
+			cli := New(svcMock)
 
 			// when
 			cli.Run(args)
@@ -205,7 +205,7 @@ func Test_EditCommand(t *testing.T) {
 			svcMock := new(MockService)
 			svcMock.On("EditProject", mock.Anything).Once()
 
-			cli := NewCli(svcMock)
+			cli := New(svcMock)
 
 			// when
 			cli.Run(args)
@@ -226,7 +226,7 @@ func Test_EditCommand(t *testing.T) {
 			svcMock := new(MockService)
 			svcMock.On("EditProject", "foobar").Once()
 
-			cli := NewCli(svcMock)
+			cli := New(svcMock)
 
 			// when
 			cli.Run(args)

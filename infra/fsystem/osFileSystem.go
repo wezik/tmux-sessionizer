@@ -1,4 +1,4 @@
-package fs
+package fsystem
 
 import "os"
 

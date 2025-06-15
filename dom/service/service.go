@@ -9,6 +9,7 @@ import (
 	"thop/dom/problem"
 	"thop/dom/selector"
 	"thop/dom/storage"
+	"thop/dom/validator"
 )
 
 type Service interface {
@@ -19,10 +20,10 @@ type Service interface {
 }
 
 type ServiceImpl struct {
-	selector       selector.Selector
-	multiplexer    multiplexer.Multiplexer
-	storage        storage.Storage
-	executor executor.CommandExecutor
+	selector    selector.Selector
+	multiplexer multiplexer.Multiplexer
+	storage     storage.Storage
+	executor    executor.CommandExecutor
 }
 
 const (
@@ -42,10 +43,10 @@ func New(
 	executor executor.CommandExecutor,
 ) *ServiceImpl {
 	return &ServiceImpl{
-		selector: selector,
+		selector:    selector,
 		multiplexer: multiplexer,
-		storage: storage,
-		executor: executor,
+		storage:     storage,
+		executor:    executor,
 	}
 }
 
@@ -58,30 +59,24 @@ func defaultProject(cwd template.Root, name project.Name) *project.Project {
 func (s *ServiceImpl) CreateProject(cwd template.Root, name project.Name) error {
 	p := defaultProject(cwd, name)
 
-	// TODO: think on externalizing this validation block to a separate package
-	// ****
-	err := p.Validate()
-	if err != nil {
+	if err := validator.ValidateProject(p); err != nil {
 		return err
 	}
-
-	p.Template.Validate()
-
-	for _, w := range p.Template.Windows {
-		w.Validate()
-	}
-	// ****
 
 	return s.storage.Save(p)
 }
 
 func (s *ServiceImpl) OpenProject(name project.Name) error {
-	project, err := s.resolveProjectName(name, promptOpenProject)
+	p, err := s.resolveProjectName(name, promptOpenProject)
 	if err != nil {
 		return err
 	}
 
-	return s.multiplexer.AttachProject(project)
+	if err := validator.ValidateProject(p); err != nil {
+		return err
+	}
+
+	return s.multiplexer.AttachProject(p)
 }
 
 func (s *ServiceImpl) DeleteProject(name project.Name) error {
