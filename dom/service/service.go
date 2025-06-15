@@ -1,148 +1,149 @@
 package service
 
 import (
-	"fmt"
-	"os"
-	"os/exec"
-	. "thop/dom/model"
-	. "thop/dom/utils"
-
-	"github.com/dsnet/try"
+	"thop/dom/executor"
+	"thop/dom/model/project"
+	"thop/dom/model/template"
+	"thop/dom/model/window"
+	"thop/dom/multiplexer"
+	"thop/dom/problem"
+	"thop/dom/selector"
+	"thop/dom/storage"
 )
 
 type Service interface {
-	CreateProject(cwd, name string)
-	SelectAndOpenProject(name string)
-	DeleteProject(name string)
-	EditProject(name string)
+	CreateProject(template.Root, project.Name) error
+	DeleteProject(project.Name) error
+	EditProject(project.Name) error
+	OpenProject(project.Name) error
 }
 
 type ServiceImpl struct {
-	sl Selector
-	mu Multiplexer
-	st Storage
-	el EditorLauncher
+	selector       selector.Selector
+	multiplexer    multiplexer.Multiplexer
+	storage        storage.Storage
+	executor executor.CommandExecutor
 }
 
-func NewService(sl Selector, mu Multiplexer, st Storage, el EditorLauncher) *ServiceImpl {
-	return &ServiceImpl{sl: sl, mu: mu, st: st, el: el}
+const (
+	promptDeleteProject = "Select project to delete > "
+	promptEditProject   = "Select project to edit > "
+	promptOpenProject   = "Select project to open > "
+)
+
+const (
+	ErrProjectNotFound problem.Key = "THOP_PROJECT_NOT_FOUND"
+)
+
+func New(
+	selector selector.Selector,
+	multiplexer multiplexer.Multiplexer,
+	storage storage.Storage,
+	executor executor.CommandExecutor,
+) *ServiceImpl {
+	return &ServiceImpl{
+		selector: selector,
+		multiplexer: multiplexer,
+		storage: storage,
+		executor: executor,
+	}
 }
 
-type Selector interface {
-	SelectFrom(items []string, prompt string) (string, error)
+func defaultProject(cwd template.Root, name project.Name) *project.Project {
+	windows := []*window.Window{window.New("shell")}
+	template := template.New(cwd, windows)
+	return project.New(name, template)
 }
 
-type Multiplexer interface {
-	AttachProject(p *Project) error
-}
+func (s *ServiceImpl) CreateProject(cwd template.Root, name project.Name) error {
+	p := defaultProject(cwd, name)
 
-type CommandExecutor interface {
-	Execute(cmd *exec.Cmd) (string, int, error)
-	ExecuteInteractive(cmd *exec.Cmd) (int, error)
-}
-
-type Storage interface {
-	List() ([]*Project, error)
-	Find(name string) (*Project, error)
-	Save(t *Project) error
-	Delete(uuid string) error
-	PrepareTemplateFile(t *Project) (string, error)
-}
-
-type FileSystem interface {
-	MkdirAll(path string) error
-	ReadDir(path string) ([]os.DirEntry, error)
-	ReadFile(path string) ([]byte, error)
-	WriteFile(path string, data []byte) error
-	RemoveAll(path string) error
-}
-
-type EditorLauncher interface {
-	Open(path string) error
-}
-
-func (s *ServiceImpl) CreateProject(cwd, name string) {
-	Ensure(name != "", "name cannot be empty")
-	Ensure(cwd != "", "cwd cannot be empty")
-
-	window := try.E1(NewWindow("shell"))
-	template := try.E1(NewTemplate(cwd, []Window{*window}))
-	project := try.E1(NewProject(name, template))
-
-	try.E(s.st.Save(project))
-}
-
-func (s *ServiceImpl) SelectAndOpenProject(name string) {
-	project, err := s.findOrSelect(name, "Select project to open > ")
-
+	// TODO: think on externalizing this validation block to a separate package
+	// ****
+	err := p.Validate()
 	if err != nil {
-		if err == ErrSelectorCancelled {
-			fmt.Println("Select operation cancelled")
-			return
-		}
-		panic(err)
+		return err
 	}
 
-	try.E(s.mu.AttachProject(project))
+	p.Template.Validate()
+
+	for _, w := range p.Template.Windows {
+		w.Validate()
+	}
+	// ****
+
+	return s.storage.Save(p)
 }
 
-func (s *ServiceImpl) DeleteProject(name string) {
-	project, err := s.findOrSelect(name, "Select project to delete > ")
-
+func (s *ServiceImpl) OpenProject(name project.Name) error {
+	project, err := s.resolveProjectName(name, promptOpenProject)
 	if err != nil {
-		if err == ErrSelectorCancelled {
-			fmt.Println("Delete operation cancelled")
-			return
-		}
-		panic(err)
+		return err
 	}
 
-	try.E(s.st.Delete(project.ID))
+	return s.multiplexer.AttachProject(project)
 }
 
-func (s *ServiceImpl) EditProject(name string) {
-	project, err := s.findOrSelect(name, "Select project to edit > ")
-
-	if err == ErrSelectorCancelled {
-		fmt.Println("Edit operation cancelled")
-		return
-	} else if err != nil {
-		panic(err)
+func (s *ServiceImpl) DeleteProject(name project.Name) error {
+	project, err := s.resolveProjectName(name, promptDeleteProject)
+	if err != nil {
+		return err
 	}
 
-	templatePath := try.E1(s.st.PrepareTemplateFile(project))
-
-	try.E(s.el.Open(templatePath))
+	return s.storage.Delete(project.UUID)
 }
 
-func (s *ServiceImpl) findOrSelect(name string, prompt string) (p *Project, err error) {
-	defer try.Handle(&err)
+func (s *ServiceImpl) EditProject(name project.Name) error {
+	project, err := s.resolveProjectName(name, promptEditProject)
+	if err != nil {
+		return err
+	}
 
+	templatePath, err := s.storage.PrepareTemplateFile(project)
+	if err != nil {
+		return err
+	}
+
+	cmd := executor.Command("nvim", templatePath)
+
+	exitCode, err := s.executor.ExecuteInteractive(cmd)
+	if err != nil {
+		return err
+	}
+
+	if exitCode != executor.ExitCodeSuccess {
+		return executor.ErrFailedExecution.WithMessage("program exited with non-zero exit code")
+	}
+
+	return nil
+}
+
+func (s *ServiceImpl) resolveProjectName(name project.Name, prompt string) (*project.Project, error) {
 	if name != "" {
-		return s.st.Find(name)
+		return s.storage.Find(name)
 	}
 
-	projects := try.E1(s.st.List())
-	selected := try.E1(s.selectProject(projects, prompt))
-
-	return selected, nil
-}
-
-func (s *ServiceImpl) selectProject(items []*Project, prompt string) (p *Project, err error) {
-	defer try.Handle(&err)
-
-	itemsStringified := make([]string, len(items))
-	itemsMap := make(map[string]*Project)
-
-	for i, item := range items {
-		itemsStringified[i] = item.Name
-		itemsMap[item.Name] = item
+	projects, err := s.storage.List()
+	if err != nil {
+		return nil, err
 	}
 
-	selectedString := try.E1(s.sl.SelectFrom(itemsStringified, prompt))
+	entries := make([]string, len(projects))
+	projectMap := make(map[string]*project.Project)
 
-	selected, ok := itemsMap[selectedString]
-	Ensure(ok, "selected item that does not exist")
+	for i, item := range projects {
+		entries[i] = string(item.Name)
+		projectMap[string(item.Name)] = item
+	}
 
-	return selected, nil
+	selected, err := s.selector.SelectFrom(entries, prompt)
+	if err != nil {
+		return nil, err
+	}
+
+	if selected, ok := projectMap[selected]; ok {
+		return selected, nil
+	}
+
+	return nil, ErrProjectNotFound.WithMessage(selected)
 }

@@ -70,7 +70,7 @@ func Test_CreateProject(t *testing.T) {
 	t.Run("creates project", func(t *testing.T) {
 		// given
 		stMock := new(MockStorage)
-		svc := NewService(nil, nil, stMock, nil)
+		svc := New(nil, nil, stMock, nil)
 
 		cwd := "/home/test"
 		name := "foobar"
@@ -96,7 +96,7 @@ func Test_CreateProject(t *testing.T) {
 		} {
 			t.Run(fmt.Sprintf("for %s and %s", args[0], args[1]), func(t *testing.T) {
 				// given
-				svc := NewService(nil, nil, nil, nil)
+				svc := New(nil, nil, nil, nil)
 				cwd := args[0]
 				name := args[1]
 
@@ -125,7 +125,7 @@ func Test_SelectAndOpenProject(t *testing.T) {
 		muMock := new(MockMultiplexer)
 		muMock.On("AttachProject", projects[0]).Return(nil).Once()
 
-		svc := NewService(slMock, muMock, stMock, nil)
+		svc := New(slMock, muMock, stMock, nil)
 
 		// when
 		svc.SelectAndOpenProject("")
@@ -147,7 +147,7 @@ func Test_SelectAndOpenProject(t *testing.T) {
 		muMock := new(MockMultiplexer)
 		muMock.On("AttachProject", project).Return(nil).Once()
 
-		svc := NewService(nil, muMock, stMock, nil)
+		svc := New(nil, muMock, stMock, nil)
 
 		// when
 		svc.SelectAndOpenProject(name)
@@ -165,7 +165,7 @@ func Test_SelectAndOpenProject(t *testing.T) {
 		stMock := new(MockStorage)
 		stMock.On("Find", name).Return(&Project{}, err).Once()
 
-		svc := NewService(nil, nil, stMock, nil)
+		svc := New(nil, nil, stMock, nil)
 
 		// when
 		defer func() {
@@ -190,7 +190,7 @@ func Test_SelectAndOpenProject(t *testing.T) {
 		stMock := new(MockStorage)
 		stMock.On("List").Return(listReturn, nil).Once()
 
-		svc := NewService(slMock, nil, stMock, nil)
+		svc := New(slMock, nil, stMock, nil)
 
 		// when
 		svc.SelectAndOpenProject("")
@@ -214,7 +214,7 @@ func Test_DeleteProject(t *testing.T) {
 		stMock.On("List").Return(projects, nil).Once()
 		stMock.On("Delete", projects[0].ID).Return(nil).Once()
 
-		svc := NewService(slMock, nil, stMock, nil)
+		svc := New(slMock, nil, stMock, nil)
 
 		// when
 		svc.DeleteProject("")
@@ -233,7 +233,7 @@ func Test_DeleteProject(t *testing.T) {
 		stMock.On("Find", name).Return(project, nil).Once()
 		stMock.On("Delete", project.ID).Return(nil).Once()
 
-		svc := NewService(nil, nil, stMock, nil)
+		svc := New(nil, nil, stMock, nil)
 
 		// when
 		svc.DeleteProject(name)
@@ -250,7 +250,7 @@ func Test_DeleteProject(t *testing.T) {
 		stMock := new(MockStorage)
 		stMock.On("Find", name).Return(&Project{}, err).Once()
 
-		svc := NewService(nil, nil, stMock, nil)
+		svc := New(nil, nil, stMock, nil)
 
 		// when
 		defer func() {
@@ -275,7 +275,7 @@ func Test_DeleteProject(t *testing.T) {
 		stMock := new(MockStorage)
 		stMock.On("List").Return(listReturn, nil).Once()
 
-		svc := NewService(slMock, nil, stMock, nil)
+		svc := New(slMock, nil, stMock, nil)
 
 		// when
 		svc.DeleteProject("")
@@ -306,7 +306,7 @@ func Test_EditProject(t *testing.T) {
 		editorMock := new(MockEditorLauncher)
 		editorMock.On("Open", templateFile).Return(nil).Once()
 
-		svc := NewService(slMock, nil, stMock, editorMock)
+		svc := New(slMock, nil, stMock, editorMock)
 
 		// when
 		svc.EditProject("")
@@ -332,7 +332,7 @@ func Test_EditProject(t *testing.T) {
 		editorMock := new(MockEditorLauncher)
 		editorMock.On("Open", templateFile).Return(nil).Once()
 
-		svc := NewService(nil, nil, stMock, editorMock)
+		svc := New(nil, nil, stMock, editorMock)
 
 		// when
 		svc.EditProject(name)
@@ -350,7 +350,7 @@ func Test_EditProject(t *testing.T) {
 		stMock := new(MockStorage)
 		stMock.On("Find", name).Return(&Project{}, err).Once()
 
-		svc := NewService(nil, nil, stMock, nil)
+		svc := New(nil, nil, stMock, nil)
 
 		// when
 		defer func() {
@@ -375,7 +375,7 @@ func Test_EditProject(t *testing.T) {
 		stMock := new(MockStorage)
 		stMock.On("List").Return(listReturn, nil).Once()
 
-		svc := NewService(slMock, nil, stMock, nil)
+		svc := New(slMock, nil, stMock, nil)
 
 		// when
 		svc.EditProject("")
