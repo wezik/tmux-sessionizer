@@ -77,7 +77,6 @@ This project is in a somewhat early experimental stage, it's destination is set 
 - Panes support
 - Integration tests
 - General config file, launchable from command
-- List active tmux sessions, and add them to configured templates (for easy switching)
 - Add kill command to kill one of active tmux sessions
 - Add showcase and example template to README
 - Review the Makefile
