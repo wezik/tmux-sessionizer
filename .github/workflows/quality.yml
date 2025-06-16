@@ -2,9 +2,13 @@ name: Quality checks
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: 
+      - "develop"
+    tags:
+      - '*'
   pull_request:
-    branches: [ "develop" ]
+    branches: 
+      - "develop"
 
 jobs:
   quality-checks:

@@ -2,12 +2,17 @@ name: Build and test
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: 
+      - "develop"
+    tags:
+      - '*'
   pull_request:
-    branches: [ "develop" ]
+    branches: 
+      - "develop"
 
 permissions:
   checks: write
+  contents: write
   pull-requests: write
 
 jobs:
@@ -24,14 +29,14 @@ jobs:
           go-version: '1.24.x'
 
       - name: 📦 Build
-        run: go build -v .
+        run: go build -o thop -v .
 
       - name: 👌 Run tests
         id: test
         continue-on-error: true
         run: |
           set -o pipefail
-          go test -v ./... 2>&1 | tee test_output.txt
+          go test -v ./test/... 2>&1 | tee test_output.txt
       
       - name: 📂 Parse test results
         run: cat test_output.txt | go run github.com/jstemmer/go-junit-report/v2@latest -set-exit-code > report.xml
@@ -41,3 +46,9 @@ jobs:
         if: (success() || failure()) && (steps.test.outcome == 'success' || steps.test.outcome == 'failure') && (github.event_name == 'pull_request')
         with:
           files: report.xml
+
+      - name: 📦 Upload binary to release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: thop
