@@ -29,7 +29,7 @@ func Test_EqualKey(t *testing.T) {
 
 		// when
 		var prob = key.WithMsg("test message")
-		var err error = key.WithMsg("different message")
+		var err error = key.WithMsg(nil)
 
 		// then
 		assert.True(t, prob.EqualKey(err))

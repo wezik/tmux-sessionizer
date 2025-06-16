@@ -1,9 +1,11 @@
 package problem
 
+import "fmt"
+
 type Key string
 
-func (k Key) WithMsg(msg string) Problem {
-	return Problem{Key: k, Message: msg}
+func (k Key) WithMsg(a ...any) Problem {
+	return Problem{Key: k, Message: fmt.Sprint(a...)}
 }
 
 type Problem struct {
