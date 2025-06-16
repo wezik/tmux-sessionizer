@@ -21,23 +21,31 @@ func main() {
 	}
 
 	configPath := filepath.Join(userConfigDir, "thop")
-	isInsideTmux := os.Getenv("TMUX") != ""
+	tmuxSession := os.Getenv("TMUX")
 
 	config := config.Config{
-		ConfigDir:  configPath,
-		Editor:     editor,
-		InsideTmux: isInsideTmux,
+		ConfigDir: configPath,
+		Editor:    editor,
 	}
 
 	executor := executor.ShellExecutor{}
 	fsystem := fsystem.OsFileSystem{}
 
 	svc := service.AppService{
-		Selector:    &selector.FzfSelector{E: &executor},
-		Multiplexer: &multiplexer.TmuxMultiplexer{E: &executor},
-		Storage:     &storage.YamlStorage{Config: &config, FileSystem: &fsystem},
-		Config:      &config,
-		E:           &executor,
+		Selector: &selector.FzfSelector{E: &executor},
+
+		Multiplexer: &multiplexer.TmuxMultiplexer{
+			ActiveTmuxSession: tmuxSession,
+			Client:            &multiplexer.TmuxClientImpl{E: &executor},
+		},
+
+		Storage: &storage.YamlStorage{
+			Config:     &config,
+			FileSystem: &fsystem,
+		},
+
+		Config: &config,
+		E:      &executor,
 	}
 
 	cmd.AppService = &svc

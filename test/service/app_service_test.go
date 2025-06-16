@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"thop/internal/config"
 	"thop/internal/problem"
 	"thop/internal/service"
 	"thop/internal/types/project"
@@ -344,14 +345,15 @@ func Test_EditProject(t *testing.T) {
 		stMock.On("List").Return(projects, nil).Once()
 		stMock.On("PrepareTemplateFile", projects[0]).Return(templateFile, nil).Once()
 
-		editorMock := new(test.MockExecutor)
-		editorMock.On("ExecuteInteractive", mock.Anything).Return(0, nil).Once()
+		executorMock := new(test.MockExecutor)
+		executorMock.On("ExecuteInteractive", mock.Anything).Return(0, nil).Once()
 
 		svc := &service.AppService{
 			Selector:    slMock,
 			Multiplexer: nil,
 			Storage:     stMock,
-			E:           editorMock,
+			Config:      &config.Config{Editor: "vim"},
+			E:           executorMock,
 		}
 
 		// when
@@ -361,7 +363,7 @@ func Test_EditProject(t *testing.T) {
 		assert.Nil(t, err)
 		slMock.AssertExpectations(t)
 		stMock.AssertExpectations(t)
-		editorMock.AssertExpectations(t)
+		executorMock.AssertExpectations(t)
 	})
 
 	t.Run("tries to find project if name is provided", func(t *testing.T) {
@@ -388,6 +390,7 @@ func Test_EditProject(t *testing.T) {
 			Selector:    nil,
 			Multiplexer: nil,
 			Storage:     stMock,
+			Config:      &config.Config{Editor: "vim"},
 			E:           editorMock,
 		}
 

@@ -17,6 +17,7 @@ func (p Problem) Error() string {
 	return p.Message
 }
 
+// Compare only by keys, not by message
 func (k Key) Equal(other error) bool {
 	if other == nil {
 		return false

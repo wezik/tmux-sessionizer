@@ -1,10 +1,10 @@
-package tmux_test
+package multiplexer_test
 
 import (
 	"errors"
 	"os/exec"
 	"testing"
-	"thop/infra/tmux"
+	"thop/internal/multiplexer"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -30,13 +30,13 @@ func (m *MockCommandExecutor) ExecuteInteractive(cmd *exec.Cmd) (int, error) {
 func Test_Client_AttachSession(t *testing.T) {
 	t.Run("returns error if session name is empty", func(t *testing.T) {
 		// given
-		client := tmux.NewTmuxClient(nil)
+		client := &multiplexer.TmuxClientImpl{}
 
 		// when
 		err := client.AttachSession("")
 
 		// then
-		assert.NotNil(t, err)
+		assert.True(t, multiplexer.ErrInvalidTemplateArgs.Equal(err))
 	})
 
 	t.Run("attaches to session", func(t *testing.T) {
@@ -49,7 +49,9 @@ func Test_Client_AttachSession(t *testing.T) {
 			{"tmux", "attach", "-t", "mysession"},
 		}
 
-		client := tmux.NewTmuxClient(mockExecutor)
+		client := multiplexer.TmuxClientImpl{
+			E: mockExecutor,
+		}
 
 		// when
 		err := client.AttachSession("mysession")
@@ -63,13 +65,15 @@ func Test_Client_AttachSession(t *testing.T) {
 func Test_Client_SwitchSession(t *testing.T) {
 	t.Run("returns error if session name is empty", func(t *testing.T) {
 		// given
-		client := tmux.NewTmuxClient(nil)
+		client := multiplexer.TmuxClientImpl{
+			E: nil,
+		}
 
 		// when
 		err := client.SwitchSession("")
 
 		// then
-		assert.NotNil(t, err)
+		assert.True(t, multiplexer.ErrInvalidTemplateArgs.Equal(err))
 	})
 
 	t.Run("switches session", func(t *testing.T) {
@@ -81,7 +85,9 @@ func Test_Client_SwitchSession(t *testing.T) {
 			{"tmux", "switch", "-t", "mysession"},
 		}
 
-		client := tmux.NewTmuxClient(mockExecutor)
+		client := multiplexer.TmuxClientImpl{
+			E: mockExecutor,
+		}
 
 		// when
 		err := client.SwitchSession("mysession")
@@ -96,13 +102,15 @@ func Test_Client_SwitchSession(t *testing.T) {
 func Test_Client_HasSession(t *testing.T) {
 	t.Run("returns error if session name is empty", func(t *testing.T) {
 		// given
-		client := tmux.NewTmuxClient(nil)
+		client := multiplexer.TmuxClientImpl{
+			E: nil,
+		}
 
 		// when
 		_, err := client.HasSession("")
 
 		// then
-		assert.NotNil(t, err)
+		assert.True(t, multiplexer.ErrInvalidTemplateArgs.Equal(err))
 	})
 
 	t.Run("returns false on exit code 1 gracefully", func(t *testing.T) {
@@ -113,7 +121,9 @@ func Test_Client_HasSession(t *testing.T) {
 			{"tmux", "has-session", "-t", "mysession"},
 		}
 
-		client := tmux.NewTmuxClient(mockExecutor)
+		client := multiplexer.TmuxClientImpl{
+			E: mockExecutor,
+		}
 
 		// when
 		exists, err := client.HasSession("mysession")
@@ -132,7 +142,9 @@ func Test_Client_HasSession(t *testing.T) {
 			{"tmux", "has-session", "-t", "mysession"},
 		}
 
-		client := tmux.NewTmuxClient(mockExecutor)
+		client := multiplexer.TmuxClientImpl{
+			E: mockExecutor,
+		}
 
 		// when
 		exists, err := client.HasSession("mysession")
@@ -147,7 +159,9 @@ func Test_Client_HasSession(t *testing.T) {
 func Test_Client_NewSession(t *testing.T) {
 	t.Run("returns error when missing required fields", func(t *testing.T) {
 		// given
-		client := tmux.NewTmuxClient(nil)
+		client := multiplexer.TmuxClientImpl{
+			E: nil,
+		}
 
 		// expect
 		err := client.NewSession("", "root", "win", "")
@@ -181,7 +195,9 @@ func Test_Client_NewSession(t *testing.T) {
 			},
 		}
 
-		client := tmux.NewTmuxClient(executor)
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
 
 		// when
 		err := client.NewSession("mysession", "/home/test", "main", "/project")
@@ -210,7 +226,9 @@ func Test_Client_NewSession(t *testing.T) {
 			},
 		}
 
-		client := tmux.NewTmuxClient(executor)
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
 
 		// when
 		err := client.NewSession("mysession", "/home/test", "main", "/project")
@@ -238,7 +256,9 @@ func Test_Client_NewSession(t *testing.T) {
 			},
 		}
 
-		client := tmux.NewTmuxClient(executor)
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
 
 		// when
 		err := client.NewSession("mysession", "/home/test", "main", "")
@@ -252,7 +272,9 @@ func Test_Client_NewSession(t *testing.T) {
 func Test_TmuxClient_SendKeys(t *testing.T) {
 	t.Run("returns error when missing required fields", func(t *testing.T) {
 		// given
-		client := tmux.NewTmuxClient(nil)
+		client := multiplexer.TmuxClientImpl{
+			E: nil,
+		}
 
 		// expect
 		err := client.SendKeys("", "win", "ls")
@@ -282,7 +304,9 @@ func Test_TmuxClient_SendKeys(t *testing.T) {
 			},
 		}
 
-		client := tmux.NewTmuxClient(executor)
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
 
 		// when
 		err := client.SendKeys("mysession", "main", "ls")
@@ -296,7 +320,9 @@ func Test_TmuxClient_SendKeys(t *testing.T) {
 func Test_Client_NewWindow(t *testing.T) {
 	t.Run("returns error when missing required fields", func(t *testing.T) {
 		// given
-		client := tmux.NewTmuxClient(nil)
+		client := multiplexer.TmuxClientImpl{
+			E: nil,
+		}
 
 		// expect
 		err := client.NewWindow("", "/project", "window", "/root")
@@ -329,7 +355,9 @@ func Test_Client_NewWindow(t *testing.T) {
 			},
 		}
 
-		client := tmux.NewTmuxClient(executor)
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
 
 		// when
 		err := client.NewWindow("mysession", "/home/test", "main", "")
@@ -357,7 +385,9 @@ func Test_Client_NewWindow(t *testing.T) {
 			},
 		}
 
-		client := tmux.NewTmuxClient(executor)
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
 
 		// when
 		err := client.NewWindow("mysession", "/home/test", "main", "/project")

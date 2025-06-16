@@ -87,6 +87,9 @@ func (s *AppService) EditProject(name project.Name) error {
 	}
 
 	templatePath, err := s.Storage.PrepareTemplateFile(p)
+	if err != nil {
+		return err
+	}
 
 	editor := s.Config.GetEditor()
 	if editor == "" {
