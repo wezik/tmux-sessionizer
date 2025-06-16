@@ -18,17 +18,16 @@ Thop is designed to be lightweight, simple to install, and extremely quick to us
 - [tmux](https://github.com/tmux/tmux) 1.8+ (except for 2.5)
 
 ## Installation
-WIP - no released binary yet, for now install from source (requires GO 1.24.2+):
+Run below script to install the latest release:
 
 ```bash
-git clone https://github.com/wezik/thop.git
-cd thop
-go build -o ./thop
+curl -L https://github.com/wezik/thop/releases/latest/download/thop -o ./thop
+chmod +x ./thop
 sudo mv ./thop /usr/local/bin/
 ```
 
 ## Usage
-```
+```bash
 thop <command> [args...]
 ```
 
@@ -65,27 +64,19 @@ Notes:
 ## Editor
 
 Thop uses your shell's default editor for opening files (`$EDITOR`)
-To change it you have 2 options:
+To change it you best option is to override it in your `.bashrc` or other shell config file:
 
-A) Add this to your `.bashrc`  
-
-```bash
+```bashrc
 export EDITOR='vim'
-``` 
-
-B) Run below command, add `editor: vim` in a new line and save it
-
-```bash
-thop config
 ```
 
 ## Current state
-This project is in a very early experimental stage, I am figuring out how I want this thing to work and what it should be capable of.
+This project is in a somewhat early experimental stage, it's destination is set but things can still change.
 
 ## Ideas / TODO's
 - Panes support
 - Integration tests
 - General config file, launchable from command
-- List active tmux sessions, and allow to attach to them
+- List active tmux sessions, and add them to configured templates (for easy switching)
 - Add showcase and example template to README
 - Review the Makefile
