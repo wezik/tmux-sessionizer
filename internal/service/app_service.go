@@ -53,6 +53,7 @@ func (s *AppService) CreateProject(root template.Root, name project.Name) error 
 		Name:    name,
 		Version: TemplateVersion,
 		Template: template.Template{
+			Root: root,
 			Windows: []window.Window{
 				{Name: "shell"},
 			},
