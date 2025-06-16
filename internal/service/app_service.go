@@ -1,8 +1,8 @@
 package service
 
 import (
-	"os"
 	"os/exec"
+	"thop/internal/config"
 	"thop/internal/executor"
 	"thop/internal/multiplexer"
 	"thop/internal/problem"
@@ -25,6 +25,7 @@ type AppService struct {
 	Selector    selector.Selector
 	Multiplexer multiplexer.Multiplexer
 	Storage     storage.Storage
+	Config      *config.Config
 	E           executor.CommandExecutor
 }
 
@@ -87,7 +88,7 @@ func (s *AppService) EditProject(name project.Name) error {
 
 	templatePath, err := s.Storage.PrepareTemplateFile(p)
 
-	editor := os.Getenv("EDITOR")
+	editor := s.Config.GetEditor()
 	if editor == "" {
 		return ErrEditorNotSet.WithMsg("$EDITOR environment variable is not set")
 	}

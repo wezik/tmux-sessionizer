@@ -37,9 +37,9 @@ func Test_CreateProject(t *testing.T) {
 
 	t.Run("errors with invalid data", func(t *testing.T) {
 		type TestCase struct {
-			cwd template.Root
+			cwd  template.Root
 			name project.Name
-			err problem.Key
+			err  problem.Key
 		}
 		for _, args := range []TestCase{
 			{"", "", service.ErrEmptyProjectName},
@@ -78,10 +78,10 @@ func Test_OpenProject(t *testing.T) {
 		muMock.On("AttachProject", projects[0]).Return(nil).Once()
 
 		svc := &service.AppService{
-			Selector: slMock,
+			Selector:    slMock,
 			Multiplexer: muMock,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -105,10 +105,10 @@ func Test_OpenProject(t *testing.T) {
 		muMock.On("AttachProject", p).Return(nil).Once()
 
 		svc := &service.AppService{
-			Selector: nil,
+			Selector:    nil,
 			Multiplexer: muMock,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -128,10 +128,10 @@ func Test_OpenProject(t *testing.T) {
 		stMock.On("Find", project.Name("foobar")).Return(project.Project{}, expected).Once()
 
 		svc := &service.AppService{
-			Selector: nil,
+			Selector:    nil,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -153,10 +153,10 @@ func Test_OpenProject(t *testing.T) {
 		stMock.On("List").Return([]project.Project{}, expected).Once()
 
 		svc := &service.AppService{
-			Selector: slMock,
+			Selector:    slMock,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -179,10 +179,10 @@ func Test_OpenProject(t *testing.T) {
 		stMock.On("List").Return(listReturn, nil).Once()
 
 		svc := &service.AppService{
-			Selector: slMock,
+			Selector:    slMock,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -209,10 +209,10 @@ func Test_DeleteProject(t *testing.T) {
 		stMock.On("Delete", projects[0].UUID).Return(nil).Once()
 
 		svc := &service.AppService{
-			Selector: slMock,
+			Selector:    slMock,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -233,10 +233,10 @@ func Test_DeleteProject(t *testing.T) {
 		stMock.On("Delete", project.UUID).Return(nil).Once()
 
 		svc := &service.AppService{
-			Selector: nil,
+			Selector:    nil,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -255,10 +255,10 @@ func Test_DeleteProject(t *testing.T) {
 		stMock.On("Find", project.Name("foobar")).Return(project.Project{}, expected).Once()
 
 		svc := &service.AppService{
-			Selector: nil,
+			Selector:    nil,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -280,10 +280,10 @@ func Test_DeleteProject(t *testing.T) {
 		stMock.On("List").Return([]project.Project{}, expected).Once()
 
 		svc := &service.AppService{
-			Selector: slMock,
+			Selector:    slMock,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -296,7 +296,7 @@ func Test_DeleteProject(t *testing.T) {
 
 	t.Run("propagates selector errors", func(t *testing.T) {
 		// given
-		expected :=  errors.New("expected error")
+		expected := errors.New("expected error")
 		listReturn := []project.Project{{UUID: "1234", Name: "foobar"}}
 
 		slMock := new(test.MockSelector)
@@ -306,10 +306,10 @@ func Test_DeleteProject(t *testing.T) {
 		stMock.On("List").Return(listReturn, nil).Once()
 
 		svc := &service.AppService{
-			Selector: slMock,
+			Selector:    slMock,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -329,7 +329,7 @@ func Test_EditProject(t *testing.T) {
 		projectNames := []string{string(projects[0].Name)}
 
 		template := template.Template{
-			Root: "/home/test",
+			Root:    "/home/test",
 			Windows: []window.Window{{Name: "main", Root: "/project"}},
 		}
 
@@ -348,10 +348,10 @@ func Test_EditProject(t *testing.T) {
 		editorMock.On("ExecuteInteractive", mock.Anything).Return(0, nil).Once()
 
 		svc := &service.AppService{
-			Selector: slMock,
+			Selector:    slMock,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: editorMock,
+			Storage:     stMock,
+			E:           editorMock,
 		}
 
 		// when
@@ -369,7 +369,7 @@ func Test_EditProject(t *testing.T) {
 		project := project.Project{UUID: "1234", Name: "foobar"}
 
 		template := template.Template{
-			Root: "/home/test",
+			Root:    "/home/test",
 			Windows: []window.Window{{Name: "main", Root: "/project"}},
 		}
 
@@ -385,10 +385,10 @@ func Test_EditProject(t *testing.T) {
 		editorMock.On("ExecuteInteractive", mock.Anything).Return(0, nil).Once()
 
 		svc := &service.AppService{
-			Selector: nil,
+			Selector:    nil,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: editorMock,
+			Storage:     stMock,
+			E:           editorMock,
 		}
 
 		// when
@@ -408,10 +408,10 @@ func Test_EditProject(t *testing.T) {
 		stMock.On("Find", project.Name("foobar")).Return(project.Project{}, expected).Once()
 
 		svc := &service.AppService{
-			Selector: nil,
+			Selector:    nil,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -433,10 +433,10 @@ func Test_EditProject(t *testing.T) {
 		stMock.On("List").Return([]project.Project{}, expected).Once()
 
 		svc := &service.AppService{
-			Selector: slMock,
+			Selector:    slMock,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when
@@ -459,10 +459,10 @@ func Test_EditProject(t *testing.T) {
 		stMock.On("List").Return(listReturn, nil).Once()
 
 		svc := &service.AppService{
-			Selector: slMock,
+			Selector:    slMock,
 			Multiplexer: nil,
-			Storage: stMock,
-			E: nil,
+			Storage:     stMock,
+			E:           nil,
 		}
 
 		// when

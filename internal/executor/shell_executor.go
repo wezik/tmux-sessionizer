@@ -9,10 +9,10 @@ type CommandExecutor interface {
 
 type ShellExecutor struct{}
 
-func (s ShellExecutor) Execute(cmd *exec.Cmd) (string, int, error) {
+func (s *ShellExecutor) Execute(cmd *exec.Cmd) (string, int, error) {
 	panic("not implemented")
 }
 
-func (s ShellExecutor) ExecuteInteractive(cmd *exec.Cmd) (int, error) {
+func (s *ShellExecutor) ExecuteInteractive(cmd *exec.Cmd) (int, error) {
 	panic("not implemented")
 }
