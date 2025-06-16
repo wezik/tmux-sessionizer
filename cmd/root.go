@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"thop/dom/service"
+	"thop/problem"
 
 	"github.com/spf13/cobra"
 )
@@ -29,10 +30,13 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		switch err.(type) {
 
-		// Prepared structure for custom error handling
+		// Prepared structure for custom error handling, but it's not used yet
+		case problem.Problem:
+			fmt.Println("Error:", err)
+			os.Exit(1)
 
 		default:
-			fmt.Println(err)
+			fmt.Println("Uncaught error:", err.Error())
 			os.Exit(1)
 
 		}
