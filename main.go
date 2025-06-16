@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"thop/cfg"
-	"thop/cli"
+	"thop/cmd"
 	"thop/dom/service"
 	"thop/infra/editor"
 	"thop/infra/fs"
@@ -35,5 +35,7 @@ func main() {
 	el := editor.NewShellEditorLauncher(cfg.GetEditor(), e)
 
 	svc := service.NewService(sl, mu, st, el)
-	cli.NewCli(svc).Run(os.Args[1:])
+
+	cmd.AppService = svc
+	cmd.Execute()
 }
