@@ -397,3 +397,44 @@ func Test_Client_NewWindow(t *testing.T) {
 		assert.Equal(t, expectedCmd, executor.ExecutedCommands)
 	})
 }
+
+func Test_Client_ListSessions(t *testing.T) {
+	t.Run("returns list of sessions", func(t *testing.T) {
+		// given
+		executor := new(MockCommandExecutor)
+		executor.On("Execute", mock.Anything).Return("foo\nbar\nbaz\n", 0, nil).Once()
+
+		expectedCmd := [][]string{
+			{"tmux", "list-sessions", "-F", "#S"},
+		}
+
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
+
+		// when
+		sessions, err := client.ListSessions()
+
+		// then
+		assert.Nil(t, err)
+		assert.Equal(t, []multiplexer.SessionName{"foo", "bar", "baz"}, sessions)
+		assert.Equal(t, expectedCmd, executor.ExecutedCommands)
+	})
+
+	t.Run("returns mapped error if command fails", func(t *testing.T) {
+		// given
+		executor := new(MockCommandExecutor)
+		executor.On("Execute", mock.Anything).Return("", 1, errors.New("exit code 1")).Once()
+
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
+
+		// when
+		_, err := client.ListSessions()
+
+		// then
+		assert.True(t, multiplexer.ErrFailedToListSessions.Equal(err))
+		executor.AssertExpectations(t)
+	})
+}

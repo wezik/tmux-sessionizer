@@ -31,6 +31,11 @@ func (m *MockMultiplexer) AttachProject(p project.Project) error {
 	return args.Error(0)
 }
 
+func (m *MockMultiplexer) ListActiveSessions() ([]project.Project, error) {
+	args := m.Called()
+	return args.Get(0).([]project.Project), args.Error(1)
+}
+
 type MockStorage struct {
 	mock.Mock
 }

@@ -6,7 +6,8 @@ import (
 )
 
 type Multiplexer interface {
-	AttachProject(p project.Project) error
+	AttachProject(project.Project) error
+	ListActiveSessions() ([]project.Project, error)
 }
 
 type TmuxMultiplexer struct {
@@ -46,6 +47,24 @@ func (m *TmuxMultiplexer) AttachProject(p project.Project) error {
 	}
 
 	return nil
+}
+
+func (m *TmuxMultiplexer) ListActiveSessions() ([]project.Project, error) {
+	sessionNames, err := m.Client.ListSessions()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: think on this more maybe there is a nicer way to do this?
+	// Creating dummy projects to combine them with templates.
+	// This produces an edge case, if the session is killed while thop is running,
+	// it will cause errors due to failed validation fields when trying to assemble the session from the dummy project.
+	var dummyProjects []project.Project
+	for _, sessionName := range sessionNames {
+		dummyProjects = append(dummyProjects, project.Project{Name: project.Name(sessionName)})
+	}
+
+	return dummyProjects, nil
 }
 
 func (m *TmuxMultiplexer) assembleSession(sessionName SessionName, p project.Project) error {

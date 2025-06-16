@@ -2,6 +2,7 @@ package service
 
 import (
 	"os/exec"
+	"slices"
 	"thop/internal/config"
 	"thop/internal/executor"
 	"thop/internal/multiplexer"
@@ -64,7 +65,7 @@ func (s *AppService) CreateProject(root template.Root, name project.Name) error 
 }
 
 func (s *AppService) OpenProject(name project.Name) error {
-	p, err := s.findOrSelect(name, "Select project to open > ")
+	p, err := s.findOrSelect(name, "Select project to open > ", true)
 	if err != nil {
 		return err
 	}
@@ -73,7 +74,7 @@ func (s *AppService) OpenProject(name project.Name) error {
 }
 
 func (s *AppService) DeleteProject(name project.Name) error {
-	p, err := s.findOrSelect(name, "Select project to delete > ")
+	p, err := s.findOrSelect(name, "Select project to delete > ", false)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func (s *AppService) DeleteProject(name project.Name) error {
 }
 
 func (s *AppService) EditProject(name project.Name) error {
-	p, err := s.findOrSelect(name, "Select project to edit > ")
+	p, err := s.findOrSelect(name, "Select project to edit > ", false)
 	if err != nil {
 		return err
 	}
@@ -102,7 +103,7 @@ func (s *AppService) EditProject(name project.Name) error {
 	return err
 }
 
-func (s *AppService) findOrSelect(name project.Name, prompt string) (project.Project, error) {
+func (s *AppService) findOrSelect(name project.Name, prompt string, withActiveSessions bool) (project.Project, error) {
 	if name != "" {
 		return s.Storage.Find(name)
 	}
@@ -110,6 +111,25 @@ func (s *AppService) findOrSelect(name project.Name, prompt string) (project.Pro
 	projects, err := s.Storage.List()
 	if err != nil {
 		return project.Project{}, err
+	}
+
+	if withActiveSessions {
+		sessions, err := s.Multiplexer.ListActiveSessions()
+		if err != nil {
+			return project.Project{}, err
+		}
+
+		// find active templates to avoid duplicates
+		for _, session := range sessions {
+			if !slices.ContainsFunc(projects, func(p project.Project) bool {
+				if p.Template.Name != "" {
+					return string(p.Template.Name) == string(session.Name)
+				}
+				return p.Name == session.Name
+			}) {
+				projects = append(projects, session)
+			}
+		}
 	}
 
 	selected, err := s.selectProject(projects, prompt)

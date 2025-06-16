@@ -3,6 +3,7 @@ package multiplexer_test
 import (
 	"testing"
 	"thop/internal/multiplexer"
+	"thop/internal/problem"
 	"thop/internal/types/command"
 	"thop/internal/types/project"
 	"thop/internal/types/template"
@@ -58,6 +59,11 @@ func (m *MockTmuxClient) SendKeys(
 ) error {
 	args := m.Called(session, windowName, keys)
 	return args.Error(0)
+}
+
+func (m *MockTmuxClient) ListSessions() ([]multiplexer.SessionName, error) {
+	args := m.Called()
+	return args.Get(0).([]multiplexer.SessionName), args.Error(1)
 }
 
 func Test_AttachProject(t *testing.T) {
@@ -277,5 +283,65 @@ func Test_AttachProject(t *testing.T) {
 
 		err := multiplexer.AttachProject(project.Project{Name: "", Template: template.Template{Name: ""}})
 		assert.NotNil(t, err, "Expected error when project has no name")
+	})
+}
+
+func Test_ListActiveSessions(t *testing.T) {
+	t.Run("returns error if client fails to list sessions", func(t *testing.T) {
+		// given
+		mockClient := new(MockTmuxClient)
+		mockClient.On("ListSessions").Return(
+			[]multiplexer.SessionName{},
+			multiplexer.ErrFailedToListSessions.WithMsg("foo"),
+		).Once()
+
+		m := multiplexer.TmuxMultiplexer{
+			Client: mockClient,
+		}
+
+		// when
+		_, err := m.ListActiveSessions()
+
+		// then
+		assert.Equal(t, multiplexer.ErrFailedToListSessions, err.(problem.Problem).Key)
+		mockClient.AssertExpectations(t)
+	})
+
+	t.Run("returns empty list if client returns empty list", func(t *testing.T) {
+		// given
+		mockClient := new(MockTmuxClient)
+		mockClient.On("ListSessions").Return([]multiplexer.SessionName{}, nil).Once()
+
+		multiplexer := multiplexer.TmuxMultiplexer{
+			Client: mockClient,
+		}
+
+		// when
+		sessions, err := multiplexer.ListActiveSessions()
+
+		// then
+		assert.Nil(t, err)
+		assert.Equal(t, []project.Project(nil), sessions)
+		mockClient.AssertExpectations(t)
+	})
+
+	t.Run("returns list of projects", func(t *testing.T) {
+		// given
+		mockClient := new(MockTmuxClient)
+		mockClient.On("ListSessions").Return([]multiplexer.SessionName{"foo", "bar"}, nil).Once()
+
+		multiplexer := multiplexer.TmuxMultiplexer{
+			Client: mockClient,
+		}
+
+		// when
+		sessions, err := multiplexer.ListActiveSessions()
+
+		// then
+		assert.Nil(t, err)
+		for i, session := range []project.Project{{Name: "foo"}, {Name: "bar"}} {
+			assert.Equal(t, session, sessions[i])
+		}
+		mockClient.AssertExpectations(t)
 	})
 }
