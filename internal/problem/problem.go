@@ -17,6 +17,9 @@ func (p Problem) Error() string {
 	return p.Message
 }
 
-func (p Problem) EqualKey(other error) bool {
-	return p.Key == other.(Problem).Key
+func (k Key) Equal(other error) bool {
+	if other == nil {
+		return false
+	}
+	return k == other.(Problem).Key
 }

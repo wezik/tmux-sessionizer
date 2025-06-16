@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"thop/dom/service"
-	"thop/problem"
+	"thop/internal/problem"
+	"thop/internal/selector"
+	"thop/internal/service"
+	"thop/internal/storage"
 
 	"github.com/spf13/cobra"
 )
