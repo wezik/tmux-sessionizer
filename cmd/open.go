@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"thop/internal/types/project"
+
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +23,6 @@ var openCmd = &cobra.Command{
 			projectName = args[0]
 		}
 
-		AppService.SelectAndOpenProject(projectName)
-		return nil
+		return AppService.OpenProject(project.Name(projectName))
 	},
 }

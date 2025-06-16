@@ -3,8 +3,9 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"thop/dom/service"
-	"thop/problem"
+	"thop/internal/problem"
+	"thop/internal/selector"
+	"thop/internal/service"
 
 	"github.com/spf13/cobra"
 )
@@ -30,8 +31,12 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		switch err.(type) {
 
-		// Prepared structure for custom error handling, but it's not used yet
 		case problem.Problem:
+			if selector.ErrSelectorCancelled.Equal(err) {
+				fmt.Println("Selection cancelled")
+				os.Exit(0)
+			}
+
 			fmt.Println("Error:", err)
 			os.Exit(1)
 

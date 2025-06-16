@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"os"
+	"thop/internal/types/project"
+	"thop/internal/types/template"
 
 	"github.com/spf13/cobra"
 )
@@ -28,7 +30,6 @@ var createCmd = &cobra.Command{
 			projectName = args[0]
 		}
 
-		AppService.CreateProject(cwd, projectName)
-		return nil
+		return AppService.CreateProject(template.Root(cwd), project.Name(projectName))
 	},
 }

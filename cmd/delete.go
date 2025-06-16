@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"thop/internal/types/project"
+
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +23,6 @@ var deleteCmd = &cobra.Command{
 			projectName = args[0]
 		}
 
-		AppService.DeleteProject(projectName)
-		return nil
+		return AppService.DeleteProject(project.Name(projectName))
 	},
 }

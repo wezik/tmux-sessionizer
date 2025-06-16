@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"thop/internal/types/project"
+
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +23,6 @@ var editCmd = &cobra.Command{
 			projectName = args[0]
 		}
 
-		AppService.EditProject(projectName)
-		return nil
+		return AppService.EditProject(project.Name(projectName))
 	},
 }

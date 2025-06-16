@@ -2,7 +2,7 @@ package problem_test
 
 import (
 	"testing"
-	"thop/problem"
+	"thop/internal/problem"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -22,16 +22,15 @@ func Test_WithMsg(t *testing.T) {
 	})
 }
 
-func Test_EqualKey(t *testing.T) {
+func Test_Equal(t *testing.T) {
 	t.Run("returns true if keys are equal", func(t *testing.T) {
 		// given
 		const key problem.Key = "test"
 
 		// when
-		var prob = key.WithMsg("test message")
-		var err error = key.WithMsg(nil)
+		var err error = key.WithMsg("test message")
 
 		// then
-		assert.True(t, prob.EqualKey(err))
+		assert.True(t, key.Equal(err))
 	})
 }
