@@ -29,6 +29,9 @@ func (m *TmuxMultiplexer) AttachProject(p project.Project) error {
 	}
 
 	if !sessionExists {
+		if p.Type == project.TypeTmuxSession {
+			return ErrTriedToBuildFromActiveSession.WithMsg("cannot build from active session (it was probably killed while thop was running)")
+		}
 		if err := m.assembleSession(sessionName, p); err != nil {
 			return err
 		}
@@ -55,16 +58,12 @@ func (m *TmuxMultiplexer) ListActiveSessions() ([]project.Project, error) {
 		return nil, err
 	}
 
-	// TODO: think on this more maybe there is a nicer way to do this?
-	// Creating dummy projects to combine them with templates.
-	// This produces an edge case, if the session is killed while thop is running,
-	// it will cause errors due to failed validation fields when trying to assemble the session from the dummy project.
-	var dummyProjects []project.Project
+	var tmuxProjects []project.Project
 	for _, sessionName := range sessionNames {
-		dummyProjects = append(dummyProjects, project.Project{Name: project.Name(sessionName), Type: project.TypeTmuxSession})
+		tmuxProjects = append(tmuxProjects, project.Project{Name: project.Name(sessionName), Type: project.TypeTmuxSession})
 	}
 
-	return dummyProjects, nil
+	return tmuxProjects, nil
 }
 
 func (m *TmuxMultiplexer) assembleSession(sessionName SessionName, p project.Project) error {

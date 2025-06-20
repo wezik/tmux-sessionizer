@@ -68,7 +68,7 @@ func entryFromProject(p *project.Project) (projectEntry, error) {
 }
 
 func (s *FzfProjectSelector) SelectFrom(items []project.Project, prompt string) (*project.Project, error) {
-	itemsInternal := make([]projectEntry, 0)
+	var itemsInternal []projectEntry
 	for _, item := range items {
 		entry, err := entryFromProject(&item)
 		if err != nil {

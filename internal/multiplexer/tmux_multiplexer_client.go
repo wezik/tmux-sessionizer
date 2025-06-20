@@ -28,14 +28,15 @@ type TmuxClientImpl struct {
 }
 
 const (
-	ErrFailedToAttachSession problem.Key = "TMUX_FAILED_TO_ATTACH_SESSION"
-	ErrFailedToSwitchSession problem.Key = "TMUX_FAILED_TO_SWITCH_SESSION"
-	ErrFailedToCheckSession  problem.Key = "TMUX_FAILED_TO_CHECK_SESSION"
-	ErrFailedToCreateSession problem.Key = "TMUX_FAILED_TO_CREATE_SESSION"
-	ErrFailedToCreateWindow  problem.Key = "TMUX_FAILED_TO_CREATE_WINDOW"
-	ErrFailedToListSessions  problem.Key = "TMUX_FAILED_TO_LIST_SESSIONS"
-	ErrFailedToSendKeys      problem.Key = "TMUX_FAILED_TO_SEND_KEYS"
-	ErrInvalidTemplateArgs   problem.Key = "TMUX_INVALID_TEMPLATE_ARGS"
+	ErrFailedToAttachSession         problem.Key = "TMUX_FAILED_TO_ATTACH_SESSION"
+	ErrFailedToSwitchSession         problem.Key = "TMUX_FAILED_TO_SWITCH_SESSION"
+	ErrFailedToCheckSession          problem.Key = "TMUX_FAILED_TO_CHECK_SESSION"
+	ErrFailedToCreateSession         problem.Key = "TMUX_FAILED_TO_CREATE_SESSION"
+	ErrFailedToCreateWindow          problem.Key = "TMUX_FAILED_TO_CREATE_WINDOW"
+	ErrFailedToListSessions          problem.Key = "TMUX_FAILED_TO_LIST_SESSIONS"
+	ErrFailedToSendKeys              problem.Key = "TMUX_FAILED_TO_SEND_KEYS"
+	ErrTriedToBuildFromActiveSession problem.Key = "TMUX_TRIED_TO_BUILD_FROM_ACTIVE_SESSION"
+	ErrInvalidTemplateArgs           problem.Key = "TMUX_INVALID_TEMPLATE_ARGS"
 )
 
 func (c *TmuxClientImpl) AttachSession(session SessionName) error {
