@@ -89,11 +89,11 @@ func (m *MockService) EditProject(name project.Name) error {
 	return args.Error(0)
 }
 
-type MockSelector struct {
+type MockProjectSelector struct {
 	mock.Mock
 }
 
-func (s *MockSelector) SelectFrom(items []string, prompt string) (string, error) {
+func (s *MockProjectSelector) SelectFrom(items []project.Project, prompt string) (*project.Project, error) {
 	args := s.Called(items, prompt)
-	return args.String(0), args.Error(1)
+	return args.Get(0).(*project.Project), args.Error(1)
 }

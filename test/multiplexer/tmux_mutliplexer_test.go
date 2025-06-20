@@ -325,7 +325,7 @@ func Test_ListActiveSessions(t *testing.T) {
 		mockClient.AssertExpectations(t)
 	})
 
-	t.Run("returns list of projects", func(t *testing.T) {
+	t.Run("returns list of session type projects", func(t *testing.T) {
 		// given
 		mockClient := new(MockTmuxClient)
 		mockClient.On("ListSessions").Return([]multiplexer.SessionName{"foo", "bar"}, nil).Once()
@@ -339,7 +339,7 @@ func Test_ListActiveSessions(t *testing.T) {
 
 		// then
 		assert.Nil(t, err)
-		for i, session := range []project.Project{{Name: "foo"}, {Name: "bar"}} {
+		for i, session := range []project.Project{{Name: "foo", Type: project.TypeTmuxSession}, {Name: "bar", Type: project.TypeTmuxSession}} {
 			assert.Equal(t, session, sessions[i])
 		}
 		mockClient.AssertExpectations(t)

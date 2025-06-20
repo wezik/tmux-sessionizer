@@ -61,7 +61,7 @@ func (m *TmuxMultiplexer) ListActiveSessions() ([]project.Project, error) {
 	// it will cause errors due to failed validation fields when trying to assemble the session from the dummy project.
 	var dummyProjects []project.Project
 	for _, sessionName := range sessionNames {
-		dummyProjects = append(dummyProjects, project.Project{Name: project.Name(sessionName)})
+		dummyProjects = append(dummyProjects, project.Project{Name: project.Name(sessionName), Type: project.TypeTmuxSession})
 	}
 
 	return dummyProjects, nil

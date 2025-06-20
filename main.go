@@ -32,7 +32,7 @@ func main() {
 	fsystem := fsystem.OsFileSystem{}
 
 	svc := service.AppService{
-		Selector: &selector.FzfSelector{E: &executor},
+		Selector: &selector.FzfProjectSelector{E: &executor},
 
 		Multiplexer: &multiplexer.TmuxMultiplexer{
 			ActiveTmuxSession: tmuxSession,

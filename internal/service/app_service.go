@@ -2,7 +2,6 @@ package service
 
 import (
 	"os/exec"
-	"slices"
 	"thop/internal/config"
 	"thop/internal/executor"
 	"thop/internal/multiplexer"
@@ -23,7 +22,7 @@ type Service interface {
 }
 
 type AppService struct {
-	Selector    selector.Selector
+	Selector    selector.ProjectSelector
 	Multiplexer multiplexer.Multiplexer
 	Storage     storage.Storage
 	Config      *config.Config
@@ -118,46 +117,14 @@ func (s *AppService) findOrSelect(name project.Name, prompt string, withActiveSe
 		if err != nil {
 			return project.Project{}, err
 		}
-
-		// find active templates to avoid duplicates
-		for _, session := range sessions {
-			if !slices.ContainsFunc(projects, func(p project.Project) bool {
-				if p.Template.Name != "" {
-					return string(p.Template.Name) == string(session.Name)
-				}
-				return p.Name == session.Name
-			}) {
-				projects = append(projects, session)
-			}
-		}
+		projects = append(projects, sessions...)
 	}
 
-	selected, err := s.selectProject(projects, prompt)
+	selected, err := s.Selector.SelectFrom(projects, prompt)
+
 	if err != nil {
 		return project.Project{}, err
 	}
 
 	return *selected, nil
-}
-
-func (s *AppService) selectProject(items []project.Project, prompt string) (*project.Project, error) {
-	itemsStringified := make([]string, len(items))
-	itemsMap := make(map[string]*project.Project)
-
-	for i, item := range items {
-		itemsStringified[i] = string(item.Name)
-		itemsMap[string(item.Name)] = &item
-	}
-
-	selectedString, err := s.Selector.SelectFrom(itemsStringified, prompt)
-	if err != nil {
-		return nil, err
-	}
-
-	selected, ok := itemsMap[selectedString]
-	if !ok {
-		return nil, ErrSelectedNonExisting.WithMsg("selected item that does not exist :D")
-	}
-
-	return selected, nil
 }
