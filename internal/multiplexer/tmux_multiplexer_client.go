@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
+	"strings"
 	"thop/internal/executor"
 	"thop/internal/problem"
 	"thop/internal/types/command"
@@ -18,6 +20,7 @@ type TmuxClient interface {
 	NewSession(SessionName, template.Root, window.Name, window.Root) error
 	NewWindow(SessionName, template.Root, window.Name, window.Root) error
 	SendKeys(SessionName, window.Name, command.Command) error
+	ListSessions() ([]SessionName, error)
 }
 
 type TmuxClientImpl struct {
@@ -25,13 +28,15 @@ type TmuxClientImpl struct {
 }
 
 const (
-	ErrFailedToAttachSession problem.Key = "TMUX_FAILED_TO_ATTACH_SESSION"
-	ErrFailedToSwitchSession problem.Key = "TMUX_FAILED_TO_SWITCH_SESSION"
-	ErrFailedToCheckSession  problem.Key = "TMUX_FAILED_TO_CHECK_SESSION"
-	ErrFailedToCreateSession problem.Key = "TMUX_FAILED_TO_CREATE_SESSION"
-	ErrFailedToCreateWindow  problem.Key = "TMUX_FAILED_TO_CREATE_WINDOW"
-	ErrFailedToSendKeys      problem.Key = "TMUX_FAILED_TO_SEND_KEYS"
-	ErrInvalidTemplateArgs   problem.Key = "TMUX_INVALID_TEMPLATE_ARGS"
+	ErrFailedToAttachSession         problem.Key = "TMUX_FAILED_TO_ATTACH_SESSION"
+	ErrFailedToSwitchSession         problem.Key = "TMUX_FAILED_TO_SWITCH_SESSION"
+	ErrFailedToCheckSession          problem.Key = "TMUX_FAILED_TO_CHECK_SESSION"
+	ErrFailedToCreateSession         problem.Key = "TMUX_FAILED_TO_CREATE_SESSION"
+	ErrFailedToCreateWindow          problem.Key = "TMUX_FAILED_TO_CREATE_WINDOW"
+	ErrFailedToListSessions          problem.Key = "TMUX_FAILED_TO_LIST_SESSIONS"
+	ErrFailedToSendKeys              problem.Key = "TMUX_FAILED_TO_SEND_KEYS"
+	ErrTriedToBuildFromActiveSession problem.Key = "TMUX_TRIED_TO_BUILD_FROM_ACTIVE_SESSION"
+	ErrInvalidTemplateArgs           problem.Key = "TMUX_INVALID_TEMPLATE_ARGS"
 )
 
 func (c *TmuxClientImpl) AttachSession(session SessionName) error {
@@ -164,11 +169,23 @@ func (c *TmuxClientImpl) SendKeys(
 	return nil
 }
 
-func anyEmpty(s ...string) bool {
-	for _, v := range s {
-		if v == "" {
-			return true
-		}
+func (c *TmuxClientImpl) ListSessions() ([]SessionName, error) {
+	cmd := exec.Command("tmux", "list-sessions", "-F", "#S")
+
+	output, _, err := c.E.Execute(cmd)
+	if err != nil {
+		return nil, ErrFailedToListSessions.WithMsg(err.Error())
 	}
-	return false
+
+	var sessionNames []SessionName
+	for line := range strings.SplitSeq(output, "\n") {
+		sessionNames = append(sessionNames, SessionName(line))
+	}
+
+	// drop the last one, it's empty
+	return sessionNames[:len(sessionNames)-1], nil
+}
+
+func anyEmpty(s ...string) bool {
+	return slices.Contains(s, "")
 }

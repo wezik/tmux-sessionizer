@@ -67,16 +67,56 @@ func Test_OpenProject(t *testing.T) {
 	t.Run("runs selector and attaches to project when name is empty", func(t *testing.T) {
 		// given
 		projects := []project.Project{{UUID: "1234", Name: "foobar"}}
-		projectNames := []string{string(projects[0].Name)}
 
-		slMock := new(test.MockSelector)
-		slMock.On("SelectFrom", projectNames, mock.Anything).Return(projectNames[0], nil).Once()
+		slMock := new(test.MockProjectSelector)
+		slMock.On("SelectFrom", projects, mock.Anything).Return(&projects[0], nil).Once()
 
 		stMock := new(test.MockStorage)
 		stMock.On("List").Return(projects, nil).Once()
 
 		muMock := new(test.MockMultiplexer)
 		muMock.On("AttachProject", projects[0]).Return(nil).Once()
+
+		muMock.On("ListActiveSessions").Return([]project.Project(nil), nil).Once()
+
+		svc := &service.AppService{
+			Selector:    slMock,
+			Multiplexer: muMock,
+			Storage:     stMock,
+			E:           nil,
+		}
+
+		// when
+		err := svc.OpenProject("")
+
+		// then
+		assert.Nil(t, err)
+		slMock.AssertExpectations(t)
+		stMock.AssertExpectations(t)
+		muMock.AssertExpectations(t)
+	})
+
+	t.Run("lists active sessions and allows to attach to them", func(t *testing.T) {
+		// given
+		projects := []project.Project{
+			{UUID: "1234", Name: "foobar"},
+		}
+		sessions := []project.Project{
+			{Name: "foobar", Type: project.TypeTmuxSession},
+			{Name: "barfoo", Type: project.TypeTmuxSession},
+		}
+		// First "session" should be filtered out
+		combined := append(projects, sessions...)
+
+		slMock := new(test.MockProjectSelector)
+		slMock.On("SelectFrom", combined, mock.Anything).Return(&combined[1], nil).Once()
+
+		stMock := new(test.MockStorage)
+		stMock.On("List").Return(projects, nil).Once()
+
+		muMock := new(test.MockMultiplexer)
+		muMock.On("AttachProject", combined[1]).Return(nil).Once()
+		muMock.On("ListActiveSessions").Return(sessions, nil).Once()
 
 		svc := &service.AppService{
 			Selector:    slMock,
@@ -147,7 +187,7 @@ func Test_OpenProject(t *testing.T) {
 		// given
 		expected := errors.New("expected error")
 
-		slMock := new(test.MockSelector)
+		slMock := new(test.MockProjectSelector)
 		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return("", nil).Once()
 
 		stMock := new(test.MockStorage)
@@ -168,20 +208,23 @@ func Test_OpenProject(t *testing.T) {
 		stMock.AssertExpectations(t)
 	})
 
-	t.Run("propagtes selector errors", func(t *testing.T) {
+	t.Run("propagates selector errors", func(t *testing.T) {
 		// given
 		expected := errors.New("expected error")
 		listReturn := []project.Project{{UUID: "1234", Name: "foobar"}}
 
-		slMock := new(test.MockSelector)
-		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return("", expected).Once()
+		slMock := new(test.MockProjectSelector)
+		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return(&project.Project{}, expected).Once()
 
 		stMock := new(test.MockStorage)
 		stMock.On("List").Return(listReturn, nil).Once()
 
+		muMock := new(test.MockMultiplexer)
+		muMock.On("ListActiveSessions").Return([]project.Project(nil), nil).Once()
+
 		svc := &service.AppService{
 			Selector:    slMock,
-			Multiplexer: nil,
+			Multiplexer: muMock,
 			Storage:     stMock,
 			E:           nil,
 		}
@@ -200,10 +243,9 @@ func Test_DeleteProject(t *testing.T) {
 	t.Run("runs selector and deletes project when name is empty", func(t *testing.T) {
 		// given
 		projects := []project.Project{{UUID: "1234", Name: "foobar"}}
-		projectNames := []string{string(projects[0].Name)}
 
-		slMock := new(test.MockSelector)
-		slMock.On("SelectFrom", projectNames, mock.Anything).Return(projectNames[0], nil).Once()
+		slMock := new(test.MockProjectSelector)
+		slMock.On("SelectFrom", projects, mock.Anything).Return(&projects[0], nil).Once()
 
 		stMock := new(test.MockStorage)
 		stMock.On("List").Return(projects, nil).Once()
@@ -274,7 +316,7 @@ func Test_DeleteProject(t *testing.T) {
 		// given
 		expected := errors.New("expected error")
 
-		slMock := new(test.MockSelector)
+		slMock := new(test.MockProjectSelector)
 		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return("", nil).Once()
 
 		stMock := new(test.MockStorage)
@@ -300,8 +342,8 @@ func Test_DeleteProject(t *testing.T) {
 		expected := errors.New("expected error")
 		listReturn := []project.Project{{UUID: "1234", Name: "foobar"}}
 
-		slMock := new(test.MockSelector)
-		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return("", expected).Once()
+		slMock := new(test.MockProjectSelector)
+		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return(&project.Project{}, expected).Once()
 
 		stMock := new(test.MockStorage)
 		stMock.On("List").Return(listReturn, nil).Once()
@@ -327,7 +369,6 @@ func Test_EditProject(t *testing.T) {
 	t.Run("runs selector and launches editor when name is empty", func(t *testing.T) {
 		// given
 		projects := []project.Project{{UUID: "1234", Name: "foobar"}}
-		projectNames := []string{string(projects[0].Name)}
 
 		template := template.Template{
 			Root:    "/home/test",
@@ -338,8 +379,8 @@ func Test_EditProject(t *testing.T) {
 
 		templateFile := "/home/test/template.yaml"
 
-		slMock := new(test.MockSelector)
-		slMock.On("SelectFrom", projectNames, mock.Anything).Return(projectNames[0], nil).Once()
+		slMock := new(test.MockProjectSelector)
+		slMock.On("SelectFrom", projects, mock.Anything).Return(&projects[0], nil).Once()
 
 		stMock := new(test.MockStorage)
 		stMock.On("List").Return(projects, nil).Once()
@@ -429,7 +470,7 @@ func Test_EditProject(t *testing.T) {
 		// given
 		expected := errors.New("expected error")
 
-		slMock := new(test.MockSelector)
+		slMock := new(test.MockProjectSelector)
 		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return("", nil).Once()
 
 		stMock := new(test.MockStorage)
@@ -455,8 +496,8 @@ func Test_EditProject(t *testing.T) {
 		expected := errors.New("expected error")
 		listReturn := []project.Project{{UUID: "1234", Name: "foobar"}}
 
-		slMock := new(test.MockSelector)
-		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return("", expected).Once()
+		slMock := new(test.MockProjectSelector)
+		slMock.On("SelectFrom", mock.Anything, mock.Anything).Return(&project.Project{}, expected).Once()
 
 		stMock := new(test.MockStorage)
 		stMock.On("List").Return(listReturn, nil).Once()

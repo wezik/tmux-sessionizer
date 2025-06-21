@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"testing"
 	"thop/internal/selector"
+	"thop/internal/types/project"
 	"thop/test"
 
 	"github.com/stretchr/testify/assert"
@@ -25,20 +26,28 @@ func Test_SelectFrom(t *testing.T) {
 			cmdToExec = args.Get(0).(*exec.Cmd)
 		}).Return(cmdResult, 0, nil).Once()
 
-		selector := selector.FzfSelector{E: execMock}
+		projects := []project.Project{
+			{Name: "foo", Type: project.TypeTemplate},
+			{Name: "foo", Type: project.TypeTmuxSession},
+			{Name: "bar", Type: project.TypeTemplate},
+			{Name: "Baz", Type: project.TypeTemplate},
+		}
+
+		selector := selector.FzfProjectSelector{E: execMock}
 
 		// when
-		s, err := selector.SelectFrom([]string{"foo", "bar", "baz"}, prompt)
+		s, err := selector.SelectFrom(projects, prompt)
 
 		// then
 		assert.Nil(t, err)
-		assert.Equal(t, "bar", s)
+		assert.Equal(t, &projects[2], s) // project with name "bar"
 		execMock.AssertExpectations(t)
 
 		assert.Equal(t, cmdToExec.Args, args)
 
 		stdin := cmdToExec.Stdin.(*bytes.Buffer)
-		assert.Equal(t, "bar\nbaz\nfoo\n", stdin.String(), "stdin should be sorted")
+		// fzf sort order is in reverse
+		assert.Equal(t, "foo\nBaz\nbar\n(Active) foo\n", stdin.String(), "stdin should be sorted")
 	})
 
 	t.Run("select maps 130 exit code to ErrSelectorCancelled", func(t *testing.T) {
@@ -46,10 +55,16 @@ func Test_SelectFrom(t *testing.T) {
 		execMock := new(test.MockExecutor)
 		execMock.On("Execute", mock.Anything).Return("foo", 130, nil).Once()
 
-		s := selector.FzfSelector{E: execMock}
+		s := selector.FzfProjectSelector{E: execMock}
+		projects := []project.Project{
+			{Name: "foo", Type: project.TypeTemplate},
+			{Name: "foo", Type: project.TypeTmuxSession},
+			{Name: "bar", Type: project.TypeTemplate},
+			{Name: "Baz", Type: project.TypeTemplate},
+		}
 
 		// when
-		_, err := s.SelectFrom([]string{"foo", "bar", "baz"}, "foo prompt > ")
+		_, err := s.SelectFrom(projects, "foo prompt > ")
 
 		// then
 		assert.True(t, selector.ErrSelectorCancelled.Equal(err))
@@ -62,10 +77,16 @@ func Test_SelectFrom(t *testing.T) {
 		expectedErr := errors.New("unknown error")
 		execMock.On("Execute", mock.Anything).Return("", 0, expectedErr).Once()
 
-		s := selector.FzfSelector{E: execMock}
+		s := selector.FzfProjectSelector{E: execMock}
+		projects := []project.Project{
+			{Name: "foo", Type: project.TypeTemplate},
+			{Name: "foo", Type: project.TypeTmuxSession},
+			{Name: "bar", Type: project.TypeTemplate},
+			{Name: "Baz", Type: project.TypeTemplate},
+		}
 
 		// when
-		_, err := s.SelectFrom([]string{"foo", "bar", "baz"}, "foo prompt > ")
+		_, err := s.SelectFrom(projects, "foo prompt > ")
 
 		// then
 		assert.True(t, selector.ErrSelectorFailed.Equal(err))

@@ -22,7 +22,7 @@ type Service interface {
 }
 
 type AppService struct {
-	Selector    selector.Selector
+	Selector    selector.ProjectSelector
 	Multiplexer multiplexer.Multiplexer
 	Storage     storage.Storage
 	Config      *config.Config
@@ -64,7 +64,7 @@ func (s *AppService) CreateProject(root template.Root, name project.Name) error 
 }
 
 func (s *AppService) OpenProject(name project.Name) error {
-	p, err := s.findOrSelect(name, "Select project to open > ")
+	p, err := s.findOrSelect(name, "Select project to open > ", true)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (s *AppService) OpenProject(name project.Name) error {
 }
 
 func (s *AppService) DeleteProject(name project.Name) error {
-	p, err := s.findOrSelect(name, "Select project to delete > ")
+	p, err := s.findOrSelect(name, "Select project to delete > ", false)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (s *AppService) DeleteProject(name project.Name) error {
 }
 
 func (s *AppService) EditProject(name project.Name) error {
-	p, err := s.findOrSelect(name, "Select project to edit > ")
+	p, err := s.findOrSelect(name, "Select project to edit > ", false)
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func (s *AppService) EditProject(name project.Name) error {
 	return err
 }
 
-func (s *AppService) findOrSelect(name project.Name, prompt string) (project.Project, error) {
+func (s *AppService) findOrSelect(name project.Name, prompt string, withActiveSessions bool) (project.Project, error) {
 	if name != "" {
 		return s.Storage.Find(name)
 	}
@@ -112,32 +112,19 @@ func (s *AppService) findOrSelect(name project.Name, prompt string) (project.Pro
 		return project.Project{}, err
 	}
 
-	selected, err := s.selectProject(projects, prompt)
+	if withActiveSessions {
+		sessions, err := s.Multiplexer.ListActiveSessions()
+		if err != nil {
+			return project.Project{}, err
+		}
+		projects = append(projects, sessions...)
+	}
+
+	selected, err := s.Selector.SelectFrom(projects, prompt)
+
 	if err != nil {
 		return project.Project{}, err
 	}
 
 	return *selected, nil
-}
-
-func (s *AppService) selectProject(items []project.Project, prompt string) (*project.Project, error) {
-	itemsStringified := make([]string, len(items))
-	itemsMap := make(map[string]*project.Project)
-
-	for i, item := range items {
-		itemsStringified[i] = string(item.Name)
-		itemsMap[string(item.Name)] = &item
-	}
-
-	selectedString, err := s.Selector.SelectFrom(itemsStringified, prompt)
-	if err != nil {
-		return nil, err
-	}
-
-	selected, ok := itemsMap[selectedString]
-	if !ok {
-		return nil, ErrSelectedNonExisting.WithMsg("selected item that does not exist :D")
-	}
-
-	return selected, nil
 }

@@ -6,7 +6,8 @@ import (
 )
 
 type Multiplexer interface {
-	AttachProject(p project.Project) error
+	AttachProject(project.Project) error
+	ListActiveSessions() ([]project.Project, error)
 }
 
 type TmuxMultiplexer struct {
@@ -28,6 +29,9 @@ func (m *TmuxMultiplexer) AttachProject(p project.Project) error {
 	}
 
 	if !sessionExists {
+		if p.Type == project.TypeTmuxSession {
+			return ErrTriedToBuildFromActiveSession.WithMsg("cannot build from active session (it was probably killed while thop was running)")
+		}
 		if err := m.assembleSession(sessionName, p); err != nil {
 			return err
 		}
@@ -46,6 +50,20 @@ func (m *TmuxMultiplexer) AttachProject(p project.Project) error {
 	}
 
 	return nil
+}
+
+func (m *TmuxMultiplexer) ListActiveSessions() ([]project.Project, error) {
+	sessionNames, err := m.Client.ListSessions()
+	if err != nil {
+		return nil, err
+	}
+
+	var tmuxProjects []project.Project
+	for _, sessionName := range sessionNames {
+		tmuxProjects = append(tmuxProjects, project.Project{Name: project.Name(sessionName), Type: project.TypeTmuxSession})
+	}
+
+	return tmuxProjects, nil
 }
 
 func (m *TmuxMultiplexer) assembleSession(sessionName SessionName, p project.Project) error {
