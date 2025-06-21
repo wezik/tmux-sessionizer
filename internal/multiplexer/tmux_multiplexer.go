@@ -53,6 +53,10 @@ func (m *TmuxMultiplexer) AttachProject(p project.Project) error {
 }
 
 func (m *TmuxMultiplexer) ListActiveSessions() ([]project.Project, error) {
+	if !m.Client.IsTmuxServerRunning() {
+		return []project.Project(nil), nil
+	}
+
 	sessionNames, err := m.Client.ListSessions()
 	if err != nil {
 		return nil, err
