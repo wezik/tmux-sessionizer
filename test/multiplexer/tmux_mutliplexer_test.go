@@ -70,6 +70,11 @@ func (m *MockTmuxClient) IsTmuxServerRunning() bool {
 	return args.Bool(0)
 }
 
+func (m *MockTmuxClient) KillSession(session multiplexer.SessionName) error {
+	args := m.Called(session)
+	return args.Error(0)
+}
+
 func Test_AttachProject(t *testing.T) {
 	t.Run("assembles and attaches to session if it doesn't exist", func(t *testing.T) {
 		// given

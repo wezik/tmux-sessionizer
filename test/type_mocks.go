@@ -36,6 +36,11 @@ func (m *MockMultiplexer) ListActiveSessions() ([]project.Project, error) {
 	return args.Get(0).([]project.Project), args.Error(1)
 }
 
+func (m *MockMultiplexer) KillSession(p project.Project) error {
+	args := m.Called(p)
+	return args.Error(0)
+}
+
 type MockStorage struct {
 	mock.Mock
 }
@@ -85,6 +90,11 @@ func (m *MockService) DeleteProject(name project.Name) error {
 }
 
 func (m *MockService) EditProject(name project.Name) error {
+	args := m.Called(name)
+	return args.Error(0)
+}
+
+func (m *MockService) KillSession(name project.Name) error {
 	args := m.Called(name)
 	return args.Error(0)
 }

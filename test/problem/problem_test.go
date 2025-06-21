@@ -1,6 +1,7 @@
 package problem_test
 
 import (
+	"errors"
 	"testing"
 	"thop/internal/problem"
 
@@ -32,5 +33,16 @@ func Test_Equal(t *testing.T) {
 
 		// then
 		assert.True(t, key.Equal(err))
+	})
+
+	t.Run("returns false if error is not a problem", func(t *testing.T) {
+		// given
+		const key problem.Key = "test"
+
+		// when
+		var err = errors.New("some error")
+
+		// then
+		assert.False(t, key.Equal(err))
 	})
 }

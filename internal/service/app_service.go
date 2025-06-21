@@ -19,6 +19,7 @@ type Service interface {
 	OpenProject(project.Name) error
 	DeleteProject(project.Name) error
 	EditProject(project.Name) error
+	KillSession(project.Name) error
 }
 
 type AppService struct {
@@ -30,10 +31,12 @@ type AppService struct {
 }
 
 const (
-	ErrEditorNotSet        problem.Key = "THOP_EDITOR_NOT_SET"
-	ErrEmptyProjectName    problem.Key = "THOP_EMPTY_PROJECT_NAME"
-	ErrEmptyRootPath       problem.Key = "THOP_EMPTY_ROOT_PATH"
-	ErrSelectedNonExisting problem.Key = "THOP_SELECTED_NON_EXISTING"
+	ErrEditorNotSet             problem.Key = "THOP_EDITOR_NOT_SET"
+	ErrEmptyProjectName         problem.Key = "THOP_EMPTY_PROJECT_NAME"
+	ErrEmptyRootPath            problem.Key = "THOP_EMPTY_ROOT_PATH"
+	ErrSelectedNonExisting      problem.Key = "THOP_SELECTED_NON_EXISTING"
+	ErrSessionNotFound          problem.Key = "THOP_SESSION_NOT_FOUND"
+	ErrProjectOrSessionNotFound problem.Key = "THOP_PROJECT_OR_SESSION_NOT_FOUND"
 )
 
 const (
@@ -64,16 +67,54 @@ func (s *AppService) CreateProject(root template.Root, name project.Name) error 
 }
 
 func (s *AppService) OpenProject(name project.Name) error {
-	p, err := s.findOrSelect(name, "Select project to open > ", true)
+	if name != "" {
+		p, err := s.Storage.Find(name)
+
+		if err == nil {
+			return s.Multiplexer.AttachProject(p)
+		}
+
+		if !storage.ErrProjectNotFound.Equal(err) {
+			return err
+		}
+
+		// try to find active session if no template is found
+		active, err := s.Multiplexer.ListActiveSessions()
+		if err != nil {
+			return err
+		}
+
+		for _, session := range active {
+			if session.Name == name {
+				return s.Multiplexer.AttachProject(session)
+			}
+		}
+
+		return ErrProjectOrSessionNotFound.WithMsg(name)
+	}
+
+	projects, err := s.Storage.List()
 	if err != nil {
 		return err
 	}
 
-	return s.Multiplexer.AttachProject(p)
+	sessions, err := s.Multiplexer.ListActiveSessions()
+	if err != nil {
+		return err
+	}
+
+	projects = append(projects, sessions...)
+
+	found, err := s.Selector.SelectFrom(projects, "Select project to open > ")
+	if err != nil {
+		return err
+	}
+
+	return s.Multiplexer.AttachProject(*found)
 }
 
 func (s *AppService) DeleteProject(name project.Name) error {
-	p, err := s.findOrSelect(name, "Select project to delete > ", false)
+	p, err := s.findOrSelect(name, "Select project to delete > ")
 	if err != nil {
 		return err
 	}
@@ -82,7 +123,7 @@ func (s *AppService) DeleteProject(name project.Name) error {
 }
 
 func (s *AppService) EditProject(name project.Name) error {
-	p, err := s.findOrSelect(name, "Select project to edit > ", false)
+	p, err := s.findOrSelect(name, "Select project to edit > ")
 	if err != nil {
 		return err
 	}
@@ -102,7 +143,31 @@ func (s *AppService) EditProject(name project.Name) error {
 	return err
 }
 
-func (s *AppService) findOrSelect(name project.Name, prompt string, withActiveSessions bool) (project.Project, error) {
+func (s *AppService) KillSession(name project.Name) error {
+	sessions, err := s.Multiplexer.ListActiveSessions()
+	if err != nil {
+		return err
+	}
+
+	if name != "" {
+		for _, session := range sessions {
+			if session.Name == name {
+				return s.Multiplexer.KillSession(session)
+			}
+		}
+		return ErrSessionNotFound.WithMsg(name)
+	}
+
+	selected, err := s.Selector.SelectFrom(sessions, "Select session to kill > ")
+	if err != nil {
+		return err
+	}
+
+	return s.Multiplexer.KillSession(*selected)
+}
+
+// common logic used by most commands
+func (s *AppService) findOrSelect(name project.Name, prompt string) (project.Project, error) {
 	if name != "" {
 		return s.Storage.Find(name)
 	}
@@ -110,14 +175,6 @@ func (s *AppService) findOrSelect(name project.Name, prompt string, withActiveSe
 	projects, err := s.Storage.List()
 	if err != nil {
 		return project.Project{}, err
-	}
-
-	if withActiveSessions {
-		sessions, err := s.Multiplexer.ListActiveSessions()
-		if err != nil {
-			return project.Project{}, err
-		}
-		projects = append(projects, sessions...)
 	}
 
 	selected, err := s.Selector.SelectFrom(projects, prompt)

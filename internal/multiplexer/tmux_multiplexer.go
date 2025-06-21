@@ -8,6 +8,7 @@ import (
 type Multiplexer interface {
 	AttachProject(project.Project) error
 	ListActiveSessions() ([]project.Project, error)
+	KillSession(project.Project) error
 }
 
 type TmuxMultiplexer struct {
@@ -68,6 +69,19 @@ func (m *TmuxMultiplexer) ListActiveSessions() ([]project.Project, error) {
 	}
 
 	return tmuxProjects, nil
+}
+
+func (m *TmuxMultiplexer) KillSession(p project.Project) error {
+	sessionName, err := resolveSessionName(p)
+	if err != nil {
+		return err
+	}
+
+	if err := m.Client.KillSession(sessionName); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *TmuxMultiplexer) assembleSession(sessionName SessionName, p project.Project) error {

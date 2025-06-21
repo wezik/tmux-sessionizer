@@ -29,15 +29,16 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		switch err.(type) {
+		switch err := err.(type) {
 
 		case problem.Problem:
+			// special case for selector cancellation
 			if selector.ErrSelectorCancelled.Equal(err) {
 				fmt.Println("Selection cancelled")
 				os.Exit(0)
 			}
 
-			fmt.Println("Error:", err)
+			fmt.Println(err.Key+":", err.Message)
 			os.Exit(1)
 
 		default:
