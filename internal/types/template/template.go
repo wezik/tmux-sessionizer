@@ -35,7 +35,7 @@ func (t *Template) WithDefaults() Template {
 		if win.Name == "" {
 			win.Name = window.Name("window" + strconv.Itoa(i))
 		}
-		
+
 		if win.Panes == nil || len(win.Panes) == 0 {
 			win.Panes = []pane.Pane{
 				{

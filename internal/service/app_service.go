@@ -56,8 +56,8 @@ func (s *AppService) CreateProject(root template.Root, name project.Name) error 
 	}
 
 	p := project.Project{
-		Name:    name,
-		Version: TemplateVersion,
+		Name:     name,
+		Version:  TemplateVersion,
 		Template: template.WithDefaults(),
 	}
 
