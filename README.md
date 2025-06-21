@@ -69,7 +69,7 @@ Templates are blue-prints for your sessions, they are stored in `$XDG_CONFIG/tho
 
 Example template:
 ```yaml
-name: Example project name                  # (requried) Name used for opening / selecting the project
+name: Example project name                  # (required) Name used for opening / selecting the project
 version: 1
 template:
   name: Optional session name               # Name of the session, will use project name if not present
