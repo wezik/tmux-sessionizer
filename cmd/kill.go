@@ -23,6 +23,6 @@ var killCmd = &cobra.Command{
 			projectName = args[0]
 		}
 
-		return AppService.KillProject(project.Name(projectName))
+		return AppService.KillSession(project.Name(projectName))
 	},
 }
