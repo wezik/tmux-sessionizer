@@ -3,7 +3,6 @@ package multiplexer_test
 import (
 	"testing"
 	"thop/internal/multiplexer"
-	"thop/internal/problem"
 	"thop/internal/types/command"
 	"thop/internal/types/project"
 	"thop/internal/types/template"
@@ -64,6 +63,11 @@ func (m *MockTmuxClient) SendKeys(
 func (m *MockTmuxClient) ListSessions() ([]multiplexer.SessionName, error) {
 	args := m.Called()
 	return args.Get(0).([]multiplexer.SessionName), args.Error(1)
+}
+
+func (m *MockTmuxClient) IsTmuxServerRunning() bool {
+	args := m.Called()
+	return args.Bool(0)
 }
 
 func Test_AttachProject(t *testing.T) {
@@ -287,23 +291,21 @@ func Test_AttachProject(t *testing.T) {
 }
 
 func Test_ListActiveSessions(t *testing.T) {
-	t.Run("returns error if client fails to list sessions", func(t *testing.T) {
+	t.Run("returns empty list if tmux server is not running", func(t *testing.T) {
 		// given
 		mockClient := new(MockTmuxClient)
-		mockClient.On("ListSessions").Return(
-			[]multiplexer.SessionName{},
-			multiplexer.ErrFailedToListSessions.WithMsg("foo"),
-		).Once()
+		mockClient.On("IsTmuxServerRunning").Return(false).Once()
 
 		m := multiplexer.TmuxMultiplexer{
 			Client: mockClient,
 		}
 
 		// when
-		_, err := m.ListActiveSessions()
+		activeSessions, err := m.ListActiveSessions()
 
 		// then
-		assert.Equal(t, multiplexer.ErrFailedToListSessions, err.(problem.Problem).Key)
+		assert.Nil(t, err)
+		assert.Equal(t, []project.Project(nil), activeSessions)
 		mockClient.AssertExpectations(t)
 	})
 
@@ -311,6 +313,7 @@ func Test_ListActiveSessions(t *testing.T) {
 		// given
 		mockClient := new(MockTmuxClient)
 		mockClient.On("ListSessions").Return([]multiplexer.SessionName{}, nil).Once()
+		mockClient.On("IsTmuxServerRunning").Return(true).Once()
 
 		multiplexer := multiplexer.TmuxMultiplexer{
 			Client: mockClient,
@@ -329,6 +332,7 @@ func Test_ListActiveSessions(t *testing.T) {
 		// given
 		mockClient := new(MockTmuxClient)
 		mockClient.On("ListSessions").Return([]multiplexer.SessionName{"foo", "bar"}, nil).Once()
+		mockClient.On("IsTmuxServerRunning").Return(true).Once()
 
 		multiplexer := multiplexer.TmuxMultiplexer{
 			Client: mockClient,

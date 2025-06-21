@@ -21,6 +21,7 @@ type TmuxClient interface {
 	NewWindow(SessionName, template.Root, window.Name, window.Root) error
 	SendKeys(SessionName, window.Name, command.Command) error
 	ListSessions() ([]SessionName, error)
+	IsTmuxServerRunning() bool
 }
 
 type TmuxClientImpl struct {
@@ -38,6 +39,12 @@ const (
 	ErrTriedToBuildFromActiveSession problem.Key = "TMUX_TRIED_TO_BUILD_FROM_ACTIVE_SESSION"
 	ErrInvalidTemplateArgs           problem.Key = "TMUX_INVALID_TEMPLATE_ARGS"
 )
+
+func (c *TmuxClientImpl) IsTmuxServerRunning() bool {
+	cmd := exec.Command("tmux", "run")
+	_, _, err := c.E.Execute(cmd)
+	return err == nil
+}
 
 func (c *TmuxClientImpl) AttachSession(session SessionName) error {
 	if session == "" {

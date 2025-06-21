@@ -438,3 +438,41 @@ func Test_Client_ListSessions(t *testing.T) {
 		executor.AssertExpectations(t)
 	})
 }
+
+func Test_IsTmuxServerRunning(t *testing.T) {
+	t.Run("returns true if tmux server is running", func(t *testing.T) {
+		// given
+		executor := new(MockCommandExecutor)
+		executor.On("Execute", mock.Anything).Return("tmux", 0, nil).Once()
+
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
+
+		// when
+		running := client.IsTmuxServerRunning()
+
+		// then
+		assert.True(t, running)
+		assert.Equal(t, executor.ExecutedCommands, [][]string{{"tmux", "run"}})
+		executor.AssertExpectations(t)
+	})
+
+	t.Run("returns false if tmux server is not running", func(t *testing.T) {
+		// given
+		executor := new(MockCommandExecutor)
+		executor.On("Execute", mock.Anything).Return("tmux", 1, errors.New("exit code 1")).Once()
+
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
+
+		// when
+		running := client.IsTmuxServerRunning()
+
+		// then
+		assert.False(t, running)
+		assert.Equal(t, executor.ExecutedCommands, [][]string{{"tmux", "run"}})
+		executor.AssertExpectations(t)
+	})
+}
