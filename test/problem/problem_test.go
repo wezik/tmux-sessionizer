@@ -40,7 +40,7 @@ func Test_Equal(t *testing.T) {
 		const key problem.Key = "test"
 
 		// when
-		var err error = errors.New("some error")
+		var err = errors.New("some error")
 
 		// then
 		assert.False(t, key.Equal(err))

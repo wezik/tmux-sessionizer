@@ -23,9 +23,9 @@ func (k Key) Equal(other error) bool {
 		return false
 	}
 
-	switch other.(type) {
+	switch other := other.(type) {
 	case Problem:
-		return k == other.(Problem).Key
+		return k == other.Key
 	default:
 		return false
 	}

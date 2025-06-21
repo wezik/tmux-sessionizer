@@ -29,7 +29,7 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		switch err.(type) {
+		switch err := err.(type) {
 
 		case problem.Problem:
 			// special case for selector cancellation
@@ -38,9 +38,7 @@ func Execute() {
 				os.Exit(0)
 			}
 
-			problem := err.(problem.Problem)
-
-			fmt.Println(problem.Key+":", problem.Message)
+			fmt.Println(err.Key+":", err.Message)
 			os.Exit(1)
 
 		default:
