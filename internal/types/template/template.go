@@ -26,16 +26,7 @@ func (t *Template) WithDefaults() Template {
 	newTemplate := *t
 
 	if newTemplate.Windows == nil || len(newTemplate.Windows) == 0 {
-		newTemplate.Windows = []window.Window{
-			{
-				Name: "main",
-				Panes: []pane.Pane{
-					{
-						Name: "main",
-					},
-				},
-			},
-		}
+		newTemplate.Windows = []window.Window{{}}
 	}
 
 	for i := range newTemplate.Windows {
@@ -48,8 +39,16 @@ func (t *Template) WithDefaults() Template {
 		if win.Panes == nil || len(win.Panes) == 0 {
 			win.Panes = []pane.Pane{
 				{
-					Name: pane.Name("pane" + strconv.Itoa(i)),
+					Name: pane.Name(string(win.Name) + "-pane" + strconv.Itoa(0)),
 				},
+			}
+		}
+
+		for j := range win.Panes {
+			pan := &win.Panes[j]
+
+			if pan.Name == "" {
+				pan.Name = pane.Name(string(win.Name) + "-pane" + strconv.Itoa(j))
 			}
 		}
 	}
