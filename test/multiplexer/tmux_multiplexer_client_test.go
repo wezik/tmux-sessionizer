@@ -476,3 +476,38 @@ func Test_IsTmuxServerRunning(t *testing.T) {
 		executor.AssertExpectations(t)
 	})
 }
+
+func Test_KillSession(t *testing.T) {
+	t.Run("returns error if session name is empty", func(t *testing.T) {
+		// given
+		client := multiplexer.TmuxClientImpl{
+			E: nil,
+		}
+
+		// when
+		err := client.KillSession("")
+
+		// then
+		assert.True(t, multiplexer.ErrInvalidTemplateArgs.Equal(err))
+	})
+
+	t.Run("kills session", func(t *testing.T) {
+		// given
+		executor := new(MockCommandExecutor)
+		executor.On("Execute", mock.Anything).Return("", 0, nil)
+		expectedCmd := [][]string{
+			{"tmux", "kill-session", "-t", "mysession"},
+		}
+
+		client := multiplexer.TmuxClientImpl{
+			E: executor,
+		}
+
+		// when
+		err := client.KillSession("mysession")
+
+		// then
+		assert.Nil(t, err)
+		assert.Equal(t, expectedCmd, executor.ExecutedCommands)
+	})
+}

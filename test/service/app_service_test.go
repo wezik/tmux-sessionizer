@@ -554,3 +554,62 @@ func Test_EditProject(t *testing.T) {
 		stMock.AssertExpectations(t)
 	})
 }
+
+func Test_KillSession(t *testing.T) {
+	t.Run("runs selector and kills session when name is empty", func(t *testing.T) {
+		// given
+		projects := []project.Project{{UUID: "1234", Name: "foobar", Type: project.TypeTmuxSession}}
+
+
+		slMock := new(test.MockProjectSelector)
+		slMock.On("SelectFrom", projects, mock.Anything).Return(&projects[0], nil).Once()
+
+		muMock := new(test.MockMultiplexer)
+		muMock.On("ListActiveSessions").Return(projects, nil).Once()
+		muMock.On("KillSession", projects[0]).Return(nil).Once()
+
+		svc := &service.AppService{
+			Selector:    slMock,
+			Multiplexer: muMock,
+			Storage:     nil,
+			E:           nil,
+		}
+
+		// when
+		err := svc.KillSession("")
+
+		// then
+		assert.Nil(t, err)
+		slMock.AssertExpectations(t)
+		muMock.AssertExpectations(t)
+	})
+
+	t.Run("tries to find active session if name is provided", func(t *testing.T) {
+		// given
+		projects := []project.Project{
+			{UUID: "1234", Name: "foobar", Type: project.TypeTmuxSession},
+			{UUID: "5678", Name: "barfoo", Type: project.TypeTmuxSession},
+		}
+
+		stMock := new(test.MockStorage)
+
+		muMock := new(test.MockMultiplexer)
+		muMock.On("ListActiveSessions").Return(projects, nil).Once()
+		muMock.On("KillSession", projects[1]).Return(nil).Once()
+
+		svc := &service.AppService{
+			Selector:    nil,
+			Multiplexer: muMock,
+			Storage:     nil,
+			E:           nil,
+		}
+
+		// when
+		err := svc.KillSession("barfoo")
+
+		// then
+		assert.Nil(t, err)
+		stMock.AssertExpectations(t)
+		muMock.AssertExpectations(t)
+	})
+}

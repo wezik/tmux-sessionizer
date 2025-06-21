@@ -32,12 +32,15 @@ func Execute() {
 		switch err.(type) {
 
 		case problem.Problem:
+			// special case for selector cancellation
 			if selector.ErrSelectorCancelled.Equal(err) {
 				fmt.Println("Selection cancelled")
 				os.Exit(0)
 			}
 
-			fmt.Println("Error:", err)
+			problem := err.(problem.Problem)
+
+			fmt.Println(problem.Key + ":", problem.Message)
 			os.Exit(1)
 
 		default:

@@ -22,6 +22,7 @@ type TmuxClient interface {
 	SendKeys(SessionName, window.Name, command.Command) error
 	ListSessions() ([]SessionName, error)
 	IsTmuxServerRunning() bool
+	KillSession(SessionName) error
 }
 
 type TmuxClientImpl struct {
@@ -35,6 +36,7 @@ const (
 	ErrFailedToCreateSession         problem.Key = "TMUX_FAILED_TO_CREATE_SESSION"
 	ErrFailedToCreateWindow          problem.Key = "TMUX_FAILED_TO_CREATE_WINDOW"
 	ErrFailedToListSessions          problem.Key = "TMUX_FAILED_TO_LIST_SESSIONS"
+	ErrFailedToKillSession           problem.Key = "TMUX_FAILED_TO_KILL_SESSION"
 	ErrFailedToSendKeys              problem.Key = "TMUX_FAILED_TO_SEND_KEYS"
 	ErrTriedToBuildFromActiveSession problem.Key = "TMUX_TRIED_TO_BUILD_FROM_ACTIVE_SESSION"
 	ErrInvalidTemplateArgs           problem.Key = "TMUX_INVALID_TEMPLATE_ARGS"
@@ -191,6 +193,21 @@ func (c *TmuxClientImpl) ListSessions() ([]SessionName, error) {
 
 	// drop the last one, it's empty
 	return sessionNames[:len(sessionNames)-1], nil
+}
+
+func (c *TmuxClientImpl) KillSession(session SessionName) error {
+	if session == "" {
+		return ErrInvalidTemplateArgs.WithMsg("session name cannot be empty")
+	}
+
+	cmd := exec.Command("tmux", "kill-session", "-t", string(session))
+
+	_, _, err := c.E.Execute(cmd)
+	if err != nil {
+		return ErrFailedToKillSession.WithMsg(err.Error())
+	}
+
+	return nil
 }
 
 func anyEmpty(s ...string) bool {
