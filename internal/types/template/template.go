@@ -17,7 +17,7 @@ type Template struct {
 	Name         Name              `yaml:"name,omitempty"`
 	Root         Root              `yaml:"root"`
 	Commands     []command.Command `yaml:"run,omitempty"`
-	Windows      []window.Window   `yaml:"windows, omitempty"`
+	Windows      []window.Window   `yaml:"windows,omitempty"`
 	ActiveWindow ActiveWindow      `yaml:"active_window,omitempty"`
 }
 
