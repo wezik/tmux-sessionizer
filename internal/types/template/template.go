@@ -25,7 +25,7 @@ type Template struct {
 func (t *Template) WithDefaults() Template {
 	newTemplate := *t
 
-	if newTemplate.Windows == nil || len(newTemplate.Windows) == 0 {
+	if len(newTemplate.Windows) == 0 {
 		newTemplate.Windows = []window.Window{{}}
 	}
 
@@ -36,7 +36,7 @@ func (t *Template) WithDefaults() Template {
 			win.Name = window.Name("window" + strconv.Itoa(i))
 		}
 
-		if win.Panes == nil || len(win.Panes) == 0 {
+		if len(win.Panes) == 0 {
 			win.Panes = []pane.Pane{
 				{
 					Name: pane.Name(string(win.Name) + "-pane" + strconv.Itoa(0)),
