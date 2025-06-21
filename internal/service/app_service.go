@@ -104,7 +104,29 @@ func (s *AppService) EditProject(name project.Name) error {
 
 func (s *AppService) findOrSelect(name project.Name, prompt string, withActiveSessions bool) (project.Project, error) {
 	if name != "" {
-		return s.Storage.Find(name)
+		p, err := s.Storage.Find(name)
+		if err != nil {
+			// if we can't find project, if enabled we can try to fallback to active session
+			if withActiveSessions {
+				if !storage.ErrProjectNotFound.Equal(err) {
+					return project.Project{}, err
+				}
+
+				sessions, err := s.Multiplexer.ListActiveSessions()
+				if err != nil {
+					return project.Project{}, err
+				}
+
+				for _, session := range sessions {
+					if session.Name == name {
+						return session, nil
+					}
+				}
+			} else {
+				return p, err
+			}
+		}
+		return p, nil
 	}
 
 	projects, err := s.Storage.List()
