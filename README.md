@@ -11,7 +11,7 @@ Thop is designed to be lightweight, simple to install, and extremely quick to us
 ### Features:
 - Fast navigation to desired project / session from anywhere (including from inside of a Tmux session)
 - Easy to edit yaml templates
-- Run commands in all/desired windows/panes
+- Execute shell commands in all/desired windows/~~panes~~(not yet supported)
 
 ## Dependencies
 - [fzf](https://github.com/junegunn/fzf)
@@ -28,55 +28,72 @@ sudo mv ./thop /usr/local/bin/
 
 ## Usage
 ```bash
-thop <command> [args...]
+thop [command]
 ```
 
 ### Commands:
 ```
-select [name]           Open a project in a new session, or switch to an existing one.
-                        - If no [name] is given, interactive selection is launched.
-                        (aliases: s, <no args>)
-
-create [name] [cwd]     Create a new project template.
-                        - If only [name] is given, uses current working directory.
-                        - If neither are given, both default to current directory name.
-                        (aliases: c, a, add, append, new)
-
-edit [name]             Edit a project template.
-                        - If no [name] is given, interactive selection is launched.
-                        - Uses editor defined in config, or $EDITOR env variable if not set.
-                        (aliases: e)
-
-delete [name]           Delete a project template.
-                        - If no [name] is given, interactive selection is launched.
-                        (aliases: d)
-
-help                    Show this help message.
-                        (aliases: any non-command string)
-
-config                  Edit thop configuration
-                        - Uses editor defined in config, or $EDITOR env variable if not set
-
-Notes:
-- Interactive selection is powered by fzf for commands without explicit [name].
+create [name]          Creates a session template.
+delete [name]          Deletes a session template.
+edit [name]            Edits a session template.
+help                   Shows help message.
+open [name]            Opens a session template.
 ```
 
-## Editor
+`[name]` argument is always optional, if not provided thop will use defaults and sometimes launch a project selector powered by fzf
 
-Thop uses your shell's default editor for opening files (`$EDITOR`)
-To change it you best option is to override it in your `.bashrc` or other shell config file:
+### Editor
+
+Thop uses your shell's default editor for opening files stored in `$EDITOR`
+To change it your best option is to override it in your `.bashrc` or other shell config file:
 
 ```bashrc
 export EDITOR='vim'
 ```
 
+### Aliases
+
+You can use aliases to make your life easier:
+
+```
+thop create:            thop c, thop new, thop add, thop a
+thop delete:            thop d
+thop edit:              thop e
+thop open:              thop o, thop select, thop s, thop
+```
+
+### Templates
+Templates are blue-prints for your sessions, they are stored in `$XDG_CONFIG/thop/templates/`, edit such template using `thop edit` command
+
+Example template:
+```yaml
+name: Example project name                  # Name used for opening / selecting the project
+version: 1
+template:
+  name: Optional session name               # Name of the session (optional), will use project name if not present
+  root: /home/foobar/projects/some_project  # Root directory for this session
+  run:                                      # List of commands to be executed in all windows (optional)
+  - echo 'Hello world'
+  windows:                                  # List of windows to be created (1 window is required)
+  - name: window1                           # Name of the window
+    root: /optional/root/dir                # Root directory for this window (optional)
+    run:                                    # List of commands to be executed in this window (optional)
+    - ls
+  - name: window2
+    run:
+    - nvim
+```
+
 ## Current state
 This project is in a somewhat early experimental stage, it's destination is set but things can still change.
 
-## Ideas / TODO's
-- Panes support
+### TODO's:
+- Pane support
 - Integration tests
-- General config file, launchable from command
-- Add kill command to kill one of active tmux sessions
-- Add showcase and example template to README
 - Review the Makefile
+
+### Ideas:
+- A general config file
+- Video showcase in README
+- Kill command to kill active tmux session
+- Create more defaults (windows, panes), to be more independent from the "correct" template
