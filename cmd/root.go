@@ -40,7 +40,7 @@ func Execute() {
 
 			problem := err.(problem.Problem)
 
-			fmt.Println(problem.Key + ":", problem.Message)
+			fmt.Println(problem.Key+":", problem.Message)
 			os.Exit(1)
 
 		default:

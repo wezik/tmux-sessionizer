@@ -560,7 +560,6 @@ func Test_KillSession(t *testing.T) {
 		// given
 		projects := []project.Project{{UUID: "1234", Name: "foobar", Type: project.TypeTmuxSession}}
 
-
 		slMock := new(test.MockProjectSelector)
 		slMock.On("SelectFrom", projects, mock.Anything).Return(&projects[0], nil).Once()
 

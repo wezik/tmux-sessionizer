@@ -80,7 +80,7 @@ func (m *TmuxMultiplexer) KillSession(p project.Project) error {
 	if err := m.Client.KillSession(sessionName); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
