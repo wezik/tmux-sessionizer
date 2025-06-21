@@ -37,10 +37,11 @@ create [name]          Creates a session template.
 delete [name]          Deletes a session template.
 edit [name]            Edits a session template.
 help                   Shows help message.
+kill [name]            Kills a session.
 open [name]            Opens a session template.
 ```
 
-`[name]` argument is always optional, if not provided thop will use defaults and sometimes launch a project selector powered by fzf
+`[name]` argument is always optional, if not provided thop will use defaults and (when needed) launch selector powered by fzf
 
 ### Editor
 
@@ -59,6 +60,7 @@ You can use aliases to make your life easier:
 thop create:            thop c, thop new, thop add, thop a
 thop delete:            thop d
 thop edit:              thop e
+thop kill:              thop k,
 thop open:              thop o, thop select, thop s, thop
 ```
 
@@ -95,5 +97,4 @@ This project is in a somewhat early experimental stage, it's destination is set 
 ### Ideas:
 - A general config file
 - Video showcase in README
-- Kill command to kill active tmux session
 - Create more defaults (windows, panes), to be more independent from the "correct" template
